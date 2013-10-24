@@ -1,0 +1,34 @@
+﻿package com.rr {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.rr.utils.AvatarLoader;
+	import com.flashgangsta.managers.ButtonManager;
+	
+	
+	public class FriendsListItem extends MovieClip {
+		
+		private var avatar:MovieClip;
+		private var _avatarURL:String;
+		
+		
+		public function FriendsListItem( avatarURL:String ) {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+			_avatarURL = avatarURL;
+			stop();
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			avatar = avatar_mc;
+			new AvatarLoader( _avatarURL, avatar, AvatarLoader.SCALE_FILL, AvatarLoader.ALIGN_CENTER_TOP, onLoaded );
+		}
+		
+		private function onLoaded():void {
+			ButtonManager.addButton( this, hit_mc );
+		}
+		
+		
+	}
+	
+}

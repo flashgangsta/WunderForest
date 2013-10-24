@@ -1,0 +1,116 @@
+﻿package com.rr {
+	
+	public class Items {
+		
+		//Фея, для норки
+		public static const ITEM_MONEYBOX:String = "1"; 				//Копилка
+		public static const ITEM_DOOR:String = "2";							//Дверь
+		public static const ITEM_CELLAR:String = "3";						//Вход в погреб
+		public static const ITEM_BOARD:String = "4";							//Доска
+		public static const ITEM_LIGHT:String = "5";							//Лампа
+		public static const ITEM_WINDOW:String = "6";						//Окно
+		public static const ITEM_FLOOR:String = "7";							//Пол
+		public static const ITEM_PRETINNESS:String = "8";				//Красивость
+		//Фея, для зверика
+		public static const ITEM_FAY_EAR:String = "9";					//На ушки
+		public static const ITEM_FAY_HAND:String = "10";				//На ручки
+		public static const ITEM_FAY_FOOT:String = "11";				//На ножки
+		public static const ITEM_FAY_GLASSES:String = "12";			//Очки
+		public static const ITEM_FAY_BOW:String = "13";					//Банты
+		public static const ITEM_FAY_TIES:String = "14";				//Галстуки/бабочки
+		//Фея, улучшалки
+		public static const ITEM_FAY_UPGRADES:String = "15";		//Улучшалки
+		//Кабаны, для боя
+		public static const ITEM_HELMETS:String = "16";					//Шлемы
+		public static const ITEM_CARDIO:String = "17";					//Кардиостимуляторы
+		public static const ITEM_HEALTH:String = "18";					//Аптечки
+		public static const ITEM_BOMB:String = "19";							//Бомбы
+		public static const ITEM_POISON:String = "20";					//Яд
+		public static const ITEM_ANTIDOTE:String = "21";				//Противоядие
+		public static const ITEM_ALCO:String = "22";							//Алкоголь
+		public static const ITEM_EAT:String = "23";							//Еда
+		public static const ITEM_BRIBE:String = "24";						//Взятки
+		public static const ITEM_POLICY:String = "25";					//Полисы
+		//Кабаны, для зверика
+		public static const ITEM_BOARS_EAR:String = "26";				//На ушки
+		public static const ITEM_BOARS_HAND:String = "27";			//На ручки
+		public static const ITEM_BOARS_FOOT:String = "28";			//На ножки
+		public static const ITEM_BOARS_GLASSES:String = "29";		//Очки
+		public static const ITEM_BOARS_BOW:String = "30";				//Банты
+		public static const ITEM_BOARS_TIES:String = "31";			//Галстуки/бабочки
+		//Кабаны, для норки
+		public static const ITEM_TV:String = "32";								//Телевизор
+		public static const ITEM_CARPET:String = "33";					//Ковер
+		public static const ITEM_SOUVENIRS:String = "34";				//Сувенир
+		public static const ITEM_EXSCESS:String = "35";					//Излишество
+		
+		public static const ITEM_BAG:String = "36";							//Рюкзак
+		public static const ITEM_LOTTERY:String = "37";					//Лотерея
+		public static const ITEM_BOARS_UPGRADES:String = "38";	//Улучшалки
+		
+		public static var all:XMLList;
+		public static var filling:Array = [];
+		
+		private static var sortedItems:Array = [];
+		
+		public function Items() {
+			throw new Error( "Items is a static class" );
+		}
+		
+		public static function recordItems( data:XMLList ):void {
+			Items.all = data.item;
+			Items.readFilling();
+		}
+		
+		public static function getItemsById( id:String, idList:Array = null ):XMLList {
+			
+			var nodes:XMLList;
+			
+			if ( id ) {
+				if ( Items.sortedItems[ id ] ) {
+					nodes = Items.sortedItems[ id ];
+				} else {
+					nodes = Items.getNodes( id );
+				}
+			} else if ( idList ) {
+				nodes = new XMLList();
+				for ( var i:int = 0; i < idList.length; i++ ) {
+					if ( Items.sortedItems[ idList[ i ] ] ) {
+						nodes += Items.sortedItems[ idList[ i ] ];
+					} else {
+						nodes += Items.getNodes( idList[ i ] );
+					}
+				}
+			}
+			
+			return nodes;
+		}
+		
+		private static function getNodes( id:String ):XMLList {
+			
+			var nodes:XMLList = new XMLList();
+			
+			for( var i:int = 0; i < Items.all.length(); i++ ) {
+				if( String( Items.all[ i ].type ) === id ) {
+					nodes += Items.all[ i ];
+				}
+			}
+
+			if( nodes.length() ) {
+				Items.sortedItems[ id ] = nodes;
+			}
+			
+			return nodes;
+			
+		}
+		
+		
+		private static function readFilling():void {
+			for ( var i:int = 0; i < Items.all.length(); i++ ) {
+				filling[ Items.all[ i ].type ] = true;
+			}
+		}
+		
+	}
+	
+}

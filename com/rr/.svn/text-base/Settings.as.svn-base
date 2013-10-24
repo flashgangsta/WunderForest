@@ -1,0 +1,121 @@
+﻿package com.rr {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.flashgangsta.managers.ButtonManager;
+	import caurina.transitions.Tweener;
+	import flash.display.StageDisplayState;
+	import flash.events.FullScreenEvent;
+	import flash.geom.Rectangle;
+	
+	
+	public class Settings extends MovieClip {
+		
+		private var settingsBtnClose:MovieClip;
+		private var settingsBtnOpen:MovieClip;
+		private var arrow:MovieClip;
+		private var maskObj:MovieClip;
+		private var buttons:MovieClip;
+		private var fullscreenBtn:MovieClip;
+		private var musicBtn:MovieClip;
+		private var soundsBtn:MovieClip;
+		private var arrowUpPoint:int;
+		private var arrowDownPoint:int;
+		private var arrowTween:Object = { useFrames: true, time: 15 };
+		private var buttonsTween:Object = { useFrames: true, transition: "easeInOutCubic", time: 15 };
+		
+		
+		public function Settings() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			settingsBtnClose = settingsBtnClose_mc;
+			settingsBtnOpen = settingsBtnOpen_mc;
+			arrow = arrow_mc;
+			maskObj = mask_mc;
+			buttons = buttons_mc;
+			fullscreenBtn = buttons.fullscreenBtn_mc;
+			musicBtn = buttons.musicBtn_mc;
+			soundsBtn = buttons.soundsBtn_mc;
+			
+			buttons.mask = maskObj;
+			
+			arrowDownPoint = arrow.y;
+			arrowUpPoint = arrowDownPoint - 20;
+			
+			ButtonManager.addButton( settingsBtnClose, null, openSettings, hideArrow, null, showArrow, hideArrow );
+			ButtonManager.addButton( settingsBtnOpen, null, closeSettings );
+			ButtonManager.addButton( fullscreenBtn, null, changeScreenMode );
+			ButtonManager.addButton( musicBtn, null, changeMusicMode );
+			ButtonManager.addButton( soundsBtn, null, changeSoundsMode );
+			
+			stage.addEventListener( FullScreenEvent.FULL_SCREEN, onScreenModeChanged );
+			
+			update();
+			
+			Main.addUpdateItem( update );
+			
+		}
+		
+		private function update():void {
+			var rect:Rectangle = Main.screenController.getScreenRect();
+			x = rect.x + rect.width - settingsBtnClose.width - Main.MARGIN;
+			y = rect.y + rect.height - settingsBtnClose.height - 120;
+		}
+		
+		private function showArrow( target:MovieClip ):void {
+			if( !settingsBtnClose.visible ) return;
+			arrowTween.transition = "easeOutCublic";
+			arrowTween.y = arrowUpPoint;
+			Tweener.addTween( arrow, arrowTween );
+		}
+		
+		private function hideArrow( target:MovieClip ):void {
+			if( !settingsBtnClose.visible ) return;
+			arrowTween.transition = "easeInCublic";
+			arrowTween.y = arrowDownPoint;
+			Tweener.addTween( arrow, arrowTween );
+		}
+		
+		private function openSettings( target:MovieClip ):void {
+			settingsBtnClose.visible = false;
+			settingsBtnOpen.visible = true;
+			arrow.y = arrowDownPoint;
+			buttonsTween.y = maskObj.y;
+			Tweener.addTween( buttons, buttonsTween );
+		}
+		
+		private function closeSettings( target:MovieClip ):void {
+			settingsBtnClose.visible = true;
+			settingsBtnOpen.visible = false;
+			arrow.y = arrowUpPoint;
+			buttonsTween.y = maskObj.y + maskObj.height;
+			Tweener.addTween( buttons, buttonsTween );
+		}
+		
+		private function changeScreenMode( target:MovieClip ):void {
+			if( stage.displayState === StageDisplayState.FULL_SCREEN ) {
+				stage.displayState = StageDisplayState.NORMAL;
+			} else {
+				stage.displayState = StageDisplayState.FULL_SCREEN;
+			}
+		}
+		
+		private function changeMusicMode( target:MovieClip ):void {
+			target.ico_mc.gotoAndStop( target.ico_mc.currentFrameLabel === "on" ? "off" : "on" );
+		}
+		
+		private function changeSoundsMode( target:MovieClip ):void {
+			target.ico_mc.gotoAndStop( target.ico_mc.currentFrameLabel === "on" ? "off" : "on" );
+		}
+		
+		private function onScreenModeChanged( event:FullScreenEvent ):void {
+			event.fullScreen ? fullscreenBtn.ico_mc.gotoAndStop( "on" ) : fullscreenBtn.ico_mc.gotoAndStop( "off" );
+		}
+		
+	}
+	
+}

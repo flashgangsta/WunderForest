@@ -1,0 +1,79 @@
+﻿package com.rr.pages {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.rr.PersonageParams;
+	import com.rr.User;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.personage.PersonageAvatar;
+	
+	
+	public class HolePersonagesLineItem extends MovieClip {
+		
+		public static const STATE_DEFAULT:String = "default";
+		public static const STATE_SELECTED:String = "selected";
+		public static const STATE_CLOSED:String = "closed";
+		public static const STATE_ADD:String = "add";
+		public static const WIDHT:int = 57;
+		
+		public var currentState:String;
+		
+		private var _data:XML;
+		private var heart:MovieClip;
+		private var persCont:MovieClip;
+		private var motionCont:MovieClip;
+		private var avatar:PersonageAvatar;
+		
+		public function HolePersonagesLineItem( state:String, data:XML = null ) {
+			currentState = state;
+			_data = data;
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			gotoAndStop( currentState );
+			
+			switch( currentState ) {
+				
+				// Не выбранный перс
+				case HolePersonagesLineItem.STATE_DEFAULT : {
+					heart = heart_mc;
+					motionCont = motion_mc;
+					persCont = avatar_mc;
+					heart.visible = _data[ PersonageParams.NUM ] === User.favorite;
+					ButtonManager.addButton( motionCont );
+					avatar = new PersonageAvatar( _data, persCont );
+					break;
+				}
+				
+				// Выбранный перс
+				case HolePersonagesLineItem.STATE_SELECTED : {
+					heart = heart_mc;
+					persCont = avatar_mc;
+					heart.visible = _data[ PersonageParams.NUM ] === User.favorite;
+					avatar = new PersonageAvatar( _data, persCont );
+					break;
+				}
+				
+				// Добавить перса
+				case HolePersonagesLineItem.STATE_ADD : {
+					motionCont = motion_mc;
+					ButtonManager.addButton( motionCont );
+					break;
+				}
+				
+				// Замок
+				case HolePersonagesLineItem.STATE_CLOSED : {
+					motionCont = motion_mc;
+					ButtonManager.addButton( motionCont );
+					break;
+				}
+				
+			}
+		}
+		
+	}
+	
+}

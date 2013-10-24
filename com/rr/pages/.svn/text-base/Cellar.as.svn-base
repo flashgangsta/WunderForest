@@ -1,0 +1,199 @@
+﻿package com.rr.pages {
+	
+	import caurina.transitions.Tweener;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.flashgangsta.managers.MappingManager;
+	import com.rr.Main;
+	import com.rr.personage.Personage;
+	import com.rr.User;
+	import com.rr.utils.Definitier;
+	import flash.display.MovieClip;
+	import flash.display.Sprite;
+	import flash.events.Event;
+	import flash.geom.Rectangle;
+	import fl.text.TLFTextField;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class Cellar extends MovieClip {
+		
+		private var cellarToBag:CellarToBag;
+		private var cellarEquip:CellarEquip;
+		private var cellarToHole:CellarToHole;
+		private var cellarInBag:CellarInBag;
+		
+		private var closeBtn:MovieClip;
+		private var lengthLabel:TLFTextField;
+		private var persNameLabel:TLFTextField;
+		private var prevPersBtn:MovieClip;
+		private var nextPersBtn:MovieClip;
+		private var toBagBtn:MovieClip;
+		private var background:MovieClip;
+		private var forHoleBtn:MovieClip;
+		
+		internal var equipBtn:MovieClip; // Экипировка
+		internal var equipmentBtn:MovieClip;
+		internal var inBagBtn:MovieClip;
+		internal var persContainer:Sprite;
+		internal var cellarContainer:CellarItemsContainer;
+		internal var personage:Personage;
+		internal var personagePlace:MovieClip;
+		internal var bag:MovieClip;
+		internal var pager:Pager;
+		internal var equipment:Equipment;
+		internal var currentCellarMode:*;
+		internal var lastCellarMode:*;
+		
+		public function Cellar() {
+			if ( ! parent ) addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			addEventListener( Event.REMOVED_FROM_STAGE, onLeave );
+			
+			closeBtn = close_mc;
+			lengthLabel = lengthLabel_txt;
+			persNameLabel = persNameLabel_txt;
+			prevPersBtn = prevPers_mc;
+			nextPersBtn = nextPers_mc;
+			equipBtn = equipBtn_mc;
+			toBagBtn = toBagBtn_mc;
+			forHoleBtn = forHoleBtn_mc;
+			pager = pager_mc;
+			personagePlace = personagePlace_mc;
+			cellarContainer = cellarContainer_mc;
+			equipBtn = equipBtn_mc;
+			equipmentBtn = equipmentBtn_mc;
+			inBagBtn = inBagBtn_mc;
+			bag = bag_mc;
+			equipment = equipment_mc;
+			background = bg_mc;
+			
+			inBagBtn.y = equipmentBtn.y;
+			inBagBtn.visible = false;
+			
+			ButtonManager.addButton( prevPersBtn );
+			ButtonManager.addButton( nextPersBtn );
+			ButtonManager.addButton( closeBtn, null, destroy );
+			ButtonManager.addButton( equipmentBtn, null, changeCellarMode );
+			ButtonManager.addButton( inBagBtn_mc, null, changeCellarMode );
+			
+			ButtonManager.addButtonGroup( [ equipBtn, toBagBtn, forHoleBtn ], false, equipBtn, false, ButtonManager.STATE_PRESSED, changeCellarMode );
+			
+			Main.addUpdateItem( update );
+			
+			addMotion();
+			
+			addPers();
+			
+			cellarContainer.fill( User.items );
+			
+		}
+		
+		private function onLeave( event:Event ):void {
+			trace( "Cellar.onLeave()" );
+			if ( personage ) personage.lock();
+		}
+		
+		private function destroy( target:MovieClip ):void {
+			Main.pageViewer.hole.changeHoleMode( Main.header.hole );
+			changeCellarMode( equipBtn );
+			ButtonManager.setSelectionOnGroup( equipBtn );
+		}
+		
+		public function addMotion():void {
+			if ( hasEventListener( Event.ADDED_TO_STAGE ) ) return;
+			
+			var step:int = 200;
+			y += step;
+			Tweener.addTween( this, { y: y - step, useFrames: true, time: 15, transition: "easeOutCubic", onComplete: onAddMotionComplete } );
+		}
+		
+		private function onAddMotionComplete():void {
+			Definitier.addDefinition( equipBtn, toBagBtn, forHoleBtn, closeBtn, equipmentBtn );
+			trace( x, y );
+		}
+		
+		private function addPers():void {
+			persContainer = new Sprite();
+			persContainer.x = personagePlace.x;
+			persContainer.y = personagePlace.y;
+			addChild( persContainer );
+			swapChildren( bag, persContainer );
+			personage = new Personage( User.getFavoritePers(), persContainer, new Rectangle( 0, 0, personagePlace.width, personagePlace.height ) );
+			persNameLabel.text = personage.getName();
+		}
+		
+		internal function changeCellarMode( target:MovieClip ):void {
+			
+			trace( "changeCellarMode", target );
+			
+			if ( currentCellarMode === cellarInBag ) {
+				currentCellarMode = cellarToBag;
+			}
+			
+			if ( currentCellarMode && target !== inBagBtn ) currentCellarMode.destroy();
+			
+			lastCellarMode = currentCellarMode;
+			
+			switch ( target ) {
+				
+				case equipBtn : {
+					if ( !cellarEquip ) cellarEquip = new CellarEquip( this );
+					currentCellarMode = cellarEquip;
+					break;
+				}
+				
+				case toBagBtn : {
+					if ( !cellarToBag ) cellarToBag = new CellarToBag( this );
+					currentCellarMode = cellarToBag;
+					break;
+				}
+				
+				case forHoleBtn : {
+					if ( !cellarToHole ) cellarToHole = new CellarToHole( this );
+					currentCellarMode = cellarToHole;
+					break;
+				}
+				
+				case equipmentBtn : {
+					currentCellarMode = equipment;
+					break;
+				}
+				
+				case inBagBtn : {
+					if ( !cellarInBag ) cellarInBag = new CellarInBag( this );
+					currentCellarMode = cellarInBag;
+					break;
+				}	
+			}
+			
+			if( currentCellarMode ) currentCellarMode.build( lastCellarMode is CellarToHole );
+			
+		}
+		
+		internal function hidePersonagesSelector():void {
+			prevPersBtn.visible = false;
+			nextPersBtn.visible = false;
+			persNameLabel.visible = false;
+		}
+		
+		internal function showPersonagesSelector():void {
+			prevPersBtn.visible = true;
+			nextPersBtn.visible = true;
+			persNameLabel.visible = true;
+		}
+		
+		public function update():void {
+			if ( !stage ) return;
+			x = MappingManager.setInCenter( stage.stageWidth, background.width );
+			y = Math.round( Main.header.height + MappingManager.setInCenter( Hole( Main.pageViewer.currentPage ).buttons.y - Main.header.height, background.height ) );
+		}
+		
+	}
+	
+}

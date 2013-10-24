@@ -1,0 +1,180 @@
+﻿package com.rr.utils {
+	import flash.display.Loader;
+	import flash.net.URLRequest;
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.flashgangsta.managers.MappingManager;
+	import com.flashgangsta.display.Drawing;
+	import flash.events.IOErrorEvent;
+	import flash.system.LoaderContext;
+	import flash.display.Sprite;
+	import flash.display.Bitmap;
+	import caurina.transitions.Tweener;
+	import com.rr.MiniPreloader;
+	import flash.display.BitmapData;
+	
+	
+	public class AvatarLoader {
+		
+		public static const ALIGN_CENTER_TOP:String = "ct";
+		public static const ALIGN_CENTER_CENTER:String = "cc";
+		public static const SCALE_FILL:String = "fill";
+		public static const SCALE_REDUCE:String = "reduce";
+		
+		public var loaded:Boolean = false;
+		
+		private var loader:Loader;
+		private var request:URLRequest;
+		private var _target:MovieClip;
+		private var _path:String;
+		private var _scaleMethod:String;
+		private var _alignMethod:String;
+		private var _onComplete:Function;
+		private var maskObj:Sprite;
+		private var preloader:MovieClip;
+		private var bitmap:Bitmap;
+		
+		// Конструктор
+		
+		public function AvatarLoader( path:String, target:MovieClip, scaleMethod:String = null, alignMethod:String = null, onComplete:Function = null, loadAfterInit:Boolean = true ) {
+			if( path === null ) return;
+			_path = path;
+			_target = target;
+			_scaleMethod = scaleMethod;
+			_alignMethod = alignMethod;
+			_onComplete = onComplete;
+			
+			if( loadAfterInit ) load();
+		}
+		
+		// Возвращает битмап дату картинки
+		
+		public function getAvatarBitmapData():BitmapData {
+			return bitmap ? bitmap.bitmapData : null;
+		}
+		
+		// Возобновляет загрузку картинки
+		
+		public function load():void {
+			loader = new Loader();
+			
+			var adress:String;
+			
+			if( _path.indexOf( "question" ) !== -1 ) {
+				adress = "http://roulette.1gb.ru/bitmaps/question_b.gif";
+			} else if( _path.indexOf( "deactivated" ) !== -1 ) {
+				adress = "http://roulette.1gb.ru/bitmaps/deactivated_b.gif";
+			} else {
+				adress = _path;
+			}
+			
+			request = new URLRequest( adress );
+			//preloader = new MiniPreloader();
+			//MappingManager.setAlign( preloader, _target.getBounds( _target.parent ) );
+			//_target.parent.addChild( preloader );
+			loader.contentLoaderInfo.addEventListener( Event.OPEN, onLoadStart );
+			loader.contentLoaderInfo.addEventListener( Event.COMPLETE, insertAvatar );
+			loader.contentLoaderInfo.addEventListener( IOErrorEvent.IO_ERROR, avatarLoadError );
+			loader.load( request, new LoaderContext( true ) );
+		}
+		
+		// Закрывает загрузку картинки
+		
+		public function close():void {
+			if ( loader ) {
+				loader.close();
+				loader.contentLoaderInfo.removeEventListener( Event.OPEN, onLoadStart );
+				loader.contentLoaderInfo.removeEventListener( Event.COMPLETE, insertAvatar );
+				loader.contentLoaderInfo.removeEventListener( IOErrorEvent.IO_ERROR, avatarLoadError );
+				
+				if( preloader ) {
+					preloader.destroy();
+					preloader = null;
+				}
+			}
+		}
+		
+		// Начало загрузки
+		
+		private function onLoadStart( event:Event ):void {
+			if( event.target.bytesTotal > 1024 * 50 ) {
+				preloader = new MiniPreloader();
+				MappingManager.setAlign( preloader, _target.getBounds( _target.parent ) );
+				_target.parent.addChild( preloader );
+			}
+		}
+		
+		// Вставляет картинку после её загрузки
+		
+		private function insertAvatar( event:Event ):void {
+			
+			loaded = true;
+			bitmap = Bitmap( loader.content );
+			
+			if( _scaleMethod ) {
+				switch( _scaleMethod ) {
+					case AvatarLoader.SCALE_FILL : {
+						MappingManager.setScaleFillArea( bitmap, _target.getBounds( _target ) );
+						maskObj = new Sprite();
+						Drawing.drawRectangle( maskObj, 0, 0, _target.width, _target.height, 0 );
+						break;
+					}
+					case AvatarLoader.SCALE_REDUCE : {
+						MappingManager.setScaleOnlyReduce( bitmap, _target.width, _target.height );
+						break;
+					}
+				}
+				
+				switch( _alignMethod ) {
+					case AvatarLoader.ALIGN_CENTER_TOP : {
+						MappingManager.setAlign( bitmap, _target.getBounds( _target ) );
+						loader.content.y = 0;
+						break;
+					}
+					case AvatarLoader.ALIGN_CENTER_CENTER : {
+						MappingManager.setAlign( bitmap, _target.getBounds( _target ) );
+						break;
+					}
+				}
+				
+				
+				if( maskObj ) {
+					bitmap.mask = maskObj;
+					_target.addChild( maskObj );
+				}
+			}
+			
+			
+			bitmap.smoothing = true;
+			_target.addChild( bitmap );
+			_target.visible = true;
+			loader.content.alpha = 0;
+			Tweener.addTween( bitmap, { alpha: 1, useFrames: true, time: 10, transition: "easeInOutCubic" } );
+			if( _onComplete !== null ) _onComplete();
+			avatarLoaderComplete();
+		}
+		
+		// Обработчик ошибки загрузки
+		
+		private function avatarLoadError( event:IOErrorEvent ):void {
+			trace( "avatar", _path, "load error:", event.text );
+			avatarLoaderComplete();
+		}
+		
+		// Обработчик окончания загрузки. Удаляет всё не нужное.
+		
+		private function avatarLoaderComplete():void {
+			loader.contentLoaderInfo.removeEventListener( Event.OPEN, onLoadStart );
+			loader.contentLoaderInfo.removeEventListener( Event.COMPLETE, insertAvatar );
+			loader.contentLoaderInfo.removeEventListener( IOErrorEvent.IO_ERROR, avatarLoadError );
+			loader = null;
+			request = null;
+			if( preloader ) {
+				preloader.destroy();
+				preloader = null;
+			}
+		}
+		
+	}
+	
+}

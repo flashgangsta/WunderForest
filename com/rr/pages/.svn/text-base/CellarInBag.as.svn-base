@@ -1,0 +1,33 @@
+package com.rr.pages {
+	import com.rr.Main;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class CellarInBag {
+		
+		private var _cellar:Cellar;
+		
+		public function CellarInBag( cellar:Cellar ) {
+			_cellar = cellar;
+		}
+		
+		public function build( useDelay:Boolean = false ):void {
+			Main.dialogs.createInBagWindow( backBlockRect );
+		}
+		
+		public function destroy():void {
+			
+		}
+		
+		private function backBlockRect():void {
+			Main.blockRect.show( Main.pageViewer );
+			_cellar.parent.addChild( _cellar );
+			
+		}
+		
+	}
+
+}

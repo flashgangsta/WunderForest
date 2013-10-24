@@ -1,0 +1,53 @@
+﻿package com.flashgangsta.utils {
+	import flash.display.MovieClip;
+	import flash.display.DisplayObject;
+	import flash.display.InteractiveObject;
+	import flash.events.Event;
+	import flash.events.FocusEvent;
+	import flash.events.MouseEvent;
+	
+	public class TabController {
+		
+		private static var _childrens:Array;
+		
+		
+		public function TabController() {
+			throw new Error( "TabController has static class" );
+		}
+		
+		public static function setChildrens( childrens:Array ):void {
+			
+			for( var i:int = 0; i < childrens.length; i++ ) {
+				var child:InteractiveObject = childrens[ i ];
+				child.tabIndex = i;
+				//child.addEventListener( , onTabChanged );
+				child.addEventListener( FocusEvent.FOCUS_IN, onFocus );
+				child.addEventListener(FocusEvent.FOCUS_OUT, onUnfocus );
+				child.focusRect = false;
+			}
+		}
+		
+		private static function onFocus ( event:FocusEvent ):void {
+			event.currentTarget.dispatchEvent( new MouseEvent( MouseEvent.ROLL_OVER ) );
+		}
+		
+		private static function onUnfocus( event:FocusEvent ):void {
+			event.currentTarget.dispatchEvent( new MouseEvent( MouseEvent.ROLL_OUT ) );
+		}
+		
+		
+		public static function removeChildrens( childrens:Array ):void {
+			for( var i:int = 0; i < childrens.length; i++ ) {
+				
+				var child:Object = childrens[ i ];
+				child.tabEnabled = false;
+				child.tabChildren = false;
+				child.tabEnabled = false;
+				
+			}
+		}
+		
+		
+	}
+	
+}

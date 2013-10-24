@@ -1,0 +1,176 @@
+﻿package com.rr.pages {
+	
+	import com.rr.Entities;
+	import com.rr.PersonageParams;
+	import com.rr.User;
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import fl.text.TLFTextField;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.utils.TextConverter;
+	import com.rr.ItemsParams;
+	import com.rr.Main;
+	import com.rr.api.Methods;
+	import flash.display.BitmapData;
+	import com.rr.utils.AvatarLoader;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class ShowcaseItem extends MovieClip {
+		
+		private var _data:XML; // Данные
+		private var wantBtn:MovieClip; // Кнопка хочу
+		private var label:TLFTextField; // Текстовое поле названия
+		private var costLabel:TLFTextField; // Текстовое поле цены в орехах
+		private var lockLabel:TLFTextField; // Текстовое поле полностью забракированного предмета
+		private var unlockLabel:TLFTextField; // Текстовое поле разборкировки предмета за золото
+		private var unlockSubLabel:TLFTextField; // Текстовое полу разблокировки предмета, вторая строка
+		private var nutIco:MovieClip; // Иконка ореха
+		private var goldIco:MovieClip; // Иконка золота
+		private var lockIco:MovieClip; // Иконка малнького замка
+		private var bigLockIco:MovieClip; // Иконка большого замка
+		private var imagePlace:MovieClip; // Зона изображения
+		private var avatarLoader:AvatarLoader; // Загрузчик изображения
+		private var avatarWaited:Boolean = false; // Флаг загрузки изображения
+		private var detailsWindow:MovieClip; // Окно подробностей
+		private var background:MovieClip; // Бекграунд
+		
+		public function ShowcaseItem( data:XML ) {
+			_data = data;
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		public function show():void {
+			if ( visible ) return;
+			visible = true;
+			if ( !avatarLoader.loaded ) avatarLoader.load();
+		}
+		
+		public function hide():void {
+			if ( !visible ) return;
+			visible = false;
+			if ( !avatarLoader.loaded ) avatarLoader.close();
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			wantBtn = want_mc;
+			label = label_txt;
+			costLabel = costLabel_txt;
+			lockLabel = lockLabel_txt;
+			unlockLabel = unlockLabel_txt;
+			unlockSubLabel = unlockSubLabel_txt;
+			nutIco = nutIco_mc;
+			goldIco = goldIco_mc;
+			lockIco = lockIco_mc;
+			bigLockIco = bigLockIco_mc;
+			imagePlace = imagePlace_mc;
+			background = bg_mc;
+			
+			
+			// available block
+			costLabel.visible = false;
+			nutIco.visible = false;
+			
+			// lock block
+			bigLockIco.visible = false;
+			lockLabel.visible = false;
+			
+			// unlock block
+			lockIco.visible = false;
+			unlockLabel.visible = false;
+			unlockSubLabel.visible = false;
+			goldIco.visible = false;
+			
+			ButtonManager.addButton( wantBtn, null, showDetailsDialog );
+			
+			label.text = _data[ ItemsParams.NAME ];
+			
+			fill();
+			
+			avatarLoader = new AvatarLoader( _data[ ItemsParams.ICO ], imagePlace, AvatarLoader.SCALE_REDUCE, AvatarLoader.ALIGN_CENTER_CENTER, onAvatarLoaded );
+			
+		}
+		
+		private function fill():void {
+			
+			var userLvl:int = User.getFavoritePers()[ PersonageParams.LEVEL ];
+			var unlockPrice:int = _data[ ItemsParams.UNLOCK_PRICE ];
+			var minLvl:int = _data[ ItemsParams.MIN_LEVEL ];
+			
+			if ( userLvl < minLvl ) {
+				if ( unlockPrice ) {
+					// цена в золоте
+					unlockLabel.text = unlockLabel.text.replace( "%lvl%", minLvl ).replace( "%gold%", TextConverter.getNumber( unlockPrice ) );
+					lockIco.visible = true;
+					unlockLabel.visible = true;
+					unlockSubLabel.visible = true;
+					goldIco.visible = true;
+				} else {
+					//Заблокировано
+					lockLabel.text = lockLabel.text.replace( "%lvl%", minLvl );
+					bigLockIco.visible = true;
+					lockLabel.visible = true;
+					background.alpha = .3;
+					imagePlace.alpha = .3;
+					label.alpha = .3;
+					wantBtn.visible = false;
+					ButtonManager.removeButton( wantBtn );
+				}
+				
+			} else {
+				//Цена в орехах
+				costLabel.text = TextConverter.getNumber( _data[ ItemsParams.PRICE ] );
+				costLabel.visible = true;
+				nutIco.visible = true;
+			}
+			
+		}
+		
+		private function onAvatarLoaded():void {
+			if( avatarWaited ) {
+				detailsWindow.insertImage( avatarLoader.getAvatarBitmapData() );
+				avatarWaited = false;
+			}
+		}
+		
+		private function showDetailsDialog( target:MovieClip ):void {
+			var bmd:BitmapData = avatarLoader.getAvatarBitmapData();
+			detailsWindow = Main.dialogs.createShopPersWindow( _data, buyItem, onAborted );
+			
+			if( bmd === null ) {
+				avatarWaited = true;
+			} else {
+				detailsWindow.insertImage( bmd );
+			}
+			
+		}
+		
+		private function buyItem():void {
+			var params:Object = {};
+			params.item_id = _data[ ItemsParams.ID ];
+			params.currencyType = int( goldIco.visible );
+			params.personage_id = User.getFavoritePers()[ PersonageParams.NUM ];
+			Main.apiCon.send( Methods.buyItem, params, onBuyed, onError );
+			detailsWindow = null;
+		}
+		
+		private function onAborted():void {
+			detailsWindow = null;
+		}
+		
+		private function onBuyed( data:XMLList = null ):void {
+			
+		}
+		
+		private function onError( data:XMLList = null ):void {
+			
+		}
+		
+	}
+	
+}

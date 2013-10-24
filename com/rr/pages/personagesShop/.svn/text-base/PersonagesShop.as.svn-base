@@ -1,0 +1,160 @@
+﻿package com.rr.pages.personagesShop {
+	
+	import com.rr.PageViewer;
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.rr.Personages;
+	import com.rr.PersonageParams;
+	import com.flashgangsta.managers.ButtonManager;
+	import caurina.transitions.Tweener;
+	import com.rr.Main;
+	import com.rr.User;
+	import flash.display.Sprite;
+	import com.flashgangsta.display.Drawing;
+	import flash.geom.Rectangle;
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
+	import flash.events.MouseEvent;
+	import flash.display.DisplayObject;
+	import com.rr.personage.Personage;
+	import fl.text.TLFTextField;
+	import com.flashgangsta.managers.MappingManager;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class PersonagesShop extends MovieClip {
+		
+		private var prevBtn:MovieClip;	//Кнопка предыдущий персонаж
+		private var nextBtn:MovieClip;	//Кнопка сдежующий персонаж
+		private var backToHoleBtn:MovieClip; //Кнопка назад в норку
+		private var board:PersBoard;
+		private var backStep:int = 157;
+		private var currentPersPlace:MovieClip;
+		private var personage:Personage; // Просматриваемый персонаж
+		private var currentNum:int = 0; // Номер просматриваемого персонажа
+		private var personages:Array = []; // Массив загруженных персонажей
+		private var currentPersContainer:Sprite; // Контейнер просматриваемого персонажа
+		private var persMotion:Object = { useFrames: true, time: 20, transition: "easeInOutCubic" };
+		
+		
+		private var personagesContainer:Sprite = new Sprite();
+		
+		
+		public function PersonagesShop() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+			addEventListener( Event.REMOVED_FROM_STAGE, onLeave );
+		}
+		
+		private function init( event:Event ):void {
+			
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			prevBtn = prev_mc;
+			nextBtn = next_mc;
+			backToHoleBtn = back_mc;
+			board = board_mc;			
+			currentPersPlace = currentPersPlace_mc;
+			
+			
+			addChild( personagesContainer );
+			personagesContainer.x = currentPersPlace.x;
+			personagesContainer.y = currentPersPlace.y;
+			
+			ButtonManager.addButton( prevBtn, null, goPrev );
+			ButtonManager.addButton( nextBtn, null, goNext );
+			
+			if( User.personages.length() ) {
+				showBackButton();
+			} else {
+				backToHoleBtn.gotoAndStop( 1 );
+				backToHoleBtn.visible = false;
+			}
+			
+			personage = getPersonage();
+			
+			Main.addUpdateItem( update );
+			
+		}
+		
+		private function onLeave( event:Event ):void {
+			personage.lock();
+		}
+		
+		// Выбор следующего персонажа
+		
+		private function goPrev( target:MovieClip ):void {
+			currentNum > 0 ? currentNum-- : currentNum = Personages.personages.length() - 1;
+			go();
+		}
+		
+		// Выбор предыдущего персонажа
+		
+		private function goNext( target:MovieClip ):void {
+			currentNum < Personages.personages.length() - 1 ? currentNum++ : currentNum = 0;
+			go();
+		}
+		
+		private function go():void {
+			personage.hide();
+			personage = getPersonage();
+			personage.show( Personage.MOTION_METHOD_ALPHA, true, null, null, true );
+		}
+		
+		private function getPersonage():Personage {
+			var pers:Personage;
+			
+			if ( personages[ currentNum ] ) {
+				pers = personages[ currentNum ].personage;
+				currentPersContainer = personages[ currentNum ].container;
+				currentPersContainer.visible = true;
+				setSex( pers );
+			} else {
+				currentPersContainer = new Sprite();
+				personagesContainer.addChild( currentPersContainer );
+				pers = new Personage( currentNum, currentPersContainer, currentPersPlace.getBounds( currentPersPlace ), onPersLoaded );
+				personages[ currentNum ] = { personage: pers, container: currentPersContainer };
+			}
+			
+			board.fillPersParams( pers );
+			
+			return pers;
+		}
+		
+		private function onPersLoaded():void {
+			setSex();
+		}
+		
+		private function setSex( pers:Personage = null ):void {
+			if ( !pers ) pers = personage;
+			pers.changeSex( ButtonManager.getSelectedButtonOfGroup( board.maleBtn ) === board.maleBtn ? Personage.SEX_MALE : Personage.SEX_FEMALE );
+		}
+		
+		private function backToHole( target:MovieClip ):void {
+			Main.pageViewer.setPage( PageViewer.PAGE_HOLE );
+			Main.header.setSelection( Main.header.hole );
+		}
+		
+		private function showBackButton():void {
+			backToHoleBtn.visible = true;
+			backToHoleBtn.y += backToHoleBtn.height;
+			Tweener.addTween( backToHoleBtn, { y: stage.stageHeight - backStep, useFrames: true, time: 15, transition: "easeOutCubic" } );
+			ButtonManager.addButton( backToHoleBtn, null, backToHole );
+		}
+		
+		public function update():void {
+			if( !stage ) return;
+			x = ( stage.stageWidth - root.loaderInfo.width ) / 2;
+			y = ( stage.stageHeight - root.loaderInfo.height ) / 2;
+			backToHoleBtn.y = stage.stageHeight - backStep;
+		}
+		
+		public function onEnter():void {
+			personage.unlock();
+		}
+		
+	}
+	
+}

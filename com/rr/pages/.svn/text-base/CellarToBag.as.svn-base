@@ -1,0 +1,67 @@
+package com.rr.pages {
+	import caurina.transitions.Tweener;
+	import caurina.transitions.properties.ColorShortcuts;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.personage.Personage;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	public class CellarToBag {
+		
+		private static const BAG_X:int = 139;
+		private static const PERS_X:int = 56;
+		
+		private var _cellar:Cellar;
+		private var bagCounter:BagCounter;
+		
+		public function CellarToBag( cellar:Cellar ) {
+			_cellar = cellar;
+			bagCounter = _cellar.bag.bagCounter_mc;
+			ColorShortcuts.init();
+		}
+		
+		public function build( useDelay:Boolean = false ):void {
+			movePersAndBag( useDelay );
+			
+			_cellar.equipmentBtn.visible = false;
+			_cellar.inBagBtn.visible = true;
+			
+			_cellar.cellarContainer.changeMode( CellarItemsContainer.MODE_DEFAULT );
+			_cellar.personage.show( Personage.MOTION_METHOD_ALPHA, false, null, null, useDelay );
+			
+			_cellar.showPersonagesSelector();
+			
+			bagCounter.setValue( 124, 25125 );
+			
+			if ( !ButtonManager.isButton( _cellar.inBagBtn ) ) ButtonManager.addButton( _cellar.inBagBtn, null, _cellar.changeCellarMode );
+		}
+		
+		public function destroy():void {
+			_cellar.inBagBtn.visible = false;
+			Tweener.addTween( _cellar.bag, { x: CellarEquip.BAG_X, alpha: 0, useFrames: true, time: 15, transition: "easeInOutCubic", onComplete: function() { this.visible = false } } );
+			Tweener.addTween( _cellar.persContainer, { _tintBrightness: 0, useFrames: true, time: 15, transition: "easeInOutCubic" } );
+		}
+		
+		private function movePersAndBag( useDelay:Boolean ):void {
+			
+			trace( _cellar.persContainer, _cellar.bag );
+			
+			if ( useDelay ) {
+				_cellar.persContainer.x = CellarEquip.PERS_X;
+				Tweener.addTween( _cellar.persContainer, { x: CellarToBag.PERS_X, _tintBrightness: -.65, useFrames: true, time: 1, transition: "easeInOutCubic" } );
+			} else {
+				Tweener.addTween( _cellar.persContainer, { x: CellarToBag.PERS_X, _tintBrightness: -.65, useFrames: true, time: 15, transition: "easeInOutCubic" } );
+			}
+			
+			Tweener.addTween( _cellar.persContainer, { x: CellarToBag.PERS_X, useFrames: true, time: 15, transition: "easeInOutCubic" } );
+			
+			_cellar.bag.alpha = 0;
+			_cellar.bag.visible = true;
+			Tweener.addTween( _cellar.bag, { x: CellarToBag.BAG_X, alpha: 1, useFrames: true, time: 15, transition: "easeInOutCubic" } );
+		}
+		
+	}
+	
+}

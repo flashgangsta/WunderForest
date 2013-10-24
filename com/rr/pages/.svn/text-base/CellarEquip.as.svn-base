@@ -1,0 +1,41 @@
+package com.rr.pages {
+	import caurina.transitions.Tweener;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.personage.Personage;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	public class CellarEquip extends Cellar {
+		
+		public static const BAG_X:int = 105;
+		public static const PERS_X:int = 82;
+		
+		private var _cellar:Cellar;
+		
+		public function CellarEquip( cellar:Cellar ) {
+			_cellar = cellar;
+		}
+		
+		public function build( useDelay:Boolean = false ):void {
+			movePers();
+			
+			_cellar.equipmentBtn.visible = true;
+			_cellar.cellarContainer.changeMode( CellarItemsContainer.MODE_DEFAULT );
+			_cellar.personage.show( Personage.MOTION_METHOD_ALPHA, false );
+			_cellar.showPersonagesSelector();
+			
+		}
+		
+		public function destroy():void {
+			_cellar.equipmentBtn.visible = false;
+		}
+		
+		private function movePers():void {
+			Tweener.addTween( _cellar.persContainer, { x: CellarEquip.PERS_X, useFrames: true, time: 15, transition: "easeInOutCubic" } );
+		}
+		
+	}
+	
+}

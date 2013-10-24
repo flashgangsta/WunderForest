@@ -1,0 +1,54 @@
+package com.rr {
+	import caurina.transitions.Tweener;
+	import com.flashgangsta.display.Drawing;
+	import flash.display.MovieClip;
+	import flash.display.Sprite;
+	import flash.display.Stage;
+	import flash.events.Event;
+	
+	/**
+	 * ...
+	 * @author Sergei Krivtsov
+	 */
+	
+	public class BlockRectangle extends Sprite {
+		
+		private var _stage:Stage;
+		
+		public function BlockRectangle( stageLink:Stage ) {
+			_stage = stageLink;
+			Drawing.drawRectangle( this, 0, 0, _stage.stageWidth, _stage.stageHeight, 0xFFFFFF, .7 );
+			cacheAsBitmap = true;
+			Main.addUpdateItem( update );
+		}
+		
+		public function show( container:MovieClip ):void {
+			
+			if ( parent !== container ) {
+				addEventListener( Event.ADDED_TO_STAGE, playShow );
+				container.addChild( this );
+				return;
+			} else {
+				parent.setChildIndex( this, parent.numChildren - 1 );
+			}
+			
+			playShow();
+		}
+		
+		public function hide():void {
+			if ( visible ) visible = false;
+		}
+		
+		public function update():void {
+			width = _stage.stageWidth;
+			height = _stage.stageHeight;
+		}
+		
+		private function playShow( event:Event = null ):void {
+			if ( hasEventListener( Event.ADDED_TO_STAGE ) ) removeEventListener( Event.ADDED_TO_STAGE, playShow );
+			visible = true;
+		}
+		
+	}
+	
+}

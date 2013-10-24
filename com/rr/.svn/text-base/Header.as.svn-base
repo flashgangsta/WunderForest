@@ -1,0 +1,150 @@
+﻿package com.rr {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.utils.AvatarLoader;
+	import fl.text.TLFTextField;
+	import com.rr.utils.TextConverter;
+	import flash.geom.Rectangle;
+	
+	public class Header extends MovieClip {
+		
+		private var main:Main;
+		private var userNameLabel:TLFTextField;
+		
+		public var wood:MovieClip;
+		public var hole:MovieClip;
+		public var shop:MovieClip;
+		public var fight:MovieClip;
+		
+		private var navigationButtons:Array = [];
+		private var ratingBtn:MovieClip;
+		private var nutsLabel:TLFTextField;
+		private var goldLabel:TLFTextField;
+		private var buyMoneyBtn:MovieClip;
+		private var userAvatar:MovieClip;
+		private var nickBorder:MovieClip;
+		
+		public var navigation:MovieClip;
+		
+		public function Header( mainLink:Main ) {
+			main = mainLink;
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			navigation = navigation_mc;
+			wood = navigation.wood_mc;
+			hole = navigation.hole_mc;
+			shop = navigation.shop_mc;
+			fight = navigation.fight_mc;
+			
+			userNameLabel = userName_txt;
+			ratingBtn = rating_mc;
+			nutsLabel = nuts_txt;
+			goldLabel = gold_txt;
+			buyMoneyBtn = buyMoney_mc;
+			userAvatar = userAvatar_mc;
+			nickBorder = nickBorder_mc;
+			
+			navigationButtons = [ wood, hole, shop, fight ];
+			
+			ButtonManager.addButtonGroup( navigationButtons, true, wood, false, null, changePage );
+
+			ButtonManager.addButton( ratingBtn, null, showRating );
+			ButtonManager.addButton( buyMoneyBtn, null, function():void { Main.vkCon.callMethod( "showPaymentBox" ) } );
+			
+			userNameLabel.text = User.firstName + " " + ( User.nickName !== null ? ( User.nickName + " " ) : "" ) + User.lastName;
+			
+			ratingBtn.label_mc.label_txt.text = User.rating.toString();
+			
+			if( userNameLabel.textWidth < userNameLabel.width ) {
+				nickBorder.visible = false;
+			}
+			
+			new AvatarLoader( User.photoMedium, userAvatar, AvatarLoader.SCALE_FILL, AvatarLoader.ALIGN_CENTER_TOP );
+			setNuts( User.nuts );
+			setGold ( User.gold );
+			
+			Main.addUpdateItem( update );
+		}
+		
+		public function setNuts( value:Number ):void {
+			nutsLabel.text = TextConverter.getNumber( value );
+			trace( "Nuts balance = " + value );
+		}
+		
+		public function setGold( value:Number ):void {
+			goldLabel.text = TextConverter.getNumber( value );
+			trace( "Gold balance = " + value );
+		}
+		
+		public function resetSelection():void {
+			ButtonManager.resetSelectionOnGroup( hole );
+		}
+		
+		public function setSelection( button:MovieClip ):void {
+			ButtonManager.setSelectionOnGroup( button );
+		}
+		
+		private function showRating( target:MovieClip ):void {
+			Main.pageViewer.setPage( PageViewer.PAGE_RATING );
+		}
+		
+		private function update():void {
+			var rect:Rectangle = Main.screenController.getScreenRect();
+			trace( rect );
+			x = rect.x;
+			y = rect.y;
+			navigation.x = rect.width - navigation.width - Main.MARGIN;
+		}
+		
+		private function changePage( target:MovieClip ):void {
+			var page_id:String;
+			switch( target ) {
+				
+				// Лес
+				case wood : {
+					page_id = PageViewer.PAGE_FOREST;
+					break;
+				}
+				
+				// Нора
+				case hole : {
+					if( User.personages.length() ) {
+						page_id = PageViewer.PAGE_HOLE;
+					} else {
+						var message:String = "Чтобы попасть в нору, нужно купить персонажа.\nПерейти к покупке персонажа?";
+						var title:String = "Стояночка!";
+						
+						Main.dialogs.createConfirmationWindow( title, message, null, navigateToPesonagesShop, stayingHere );
+						return;
+					}
+					break;
+				}
+				
+				// Магазин
+				case shop : {
+					page_id = PageViewer.PAGE_SHOP;
+					break;
+				}
+			}
+			
+			Main.pageViewer.setPage( page_id );
+		}
+		
+		private function navigateToPesonagesShop():void {
+			Main.pageViewer.setPage( PageViewer.PAGE_PERSONAGES_SHOP );
+			resetSelection();
+		}
+		
+		private function stayingHere():void {
+			ButtonManager.returnOldSelectionOfGroup( hole );
+		}
+		
+	}
+	
+}

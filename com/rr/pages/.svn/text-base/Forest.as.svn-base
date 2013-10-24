@@ -1,0 +1,31 @@
+﻿package com.rr.pages {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.User;
+	import com.rr.PageViewer;
+	import com.rr.Main;
+	
+	
+	public class Forest extends MovieClip {
+		
+		
+		public function Forest() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			Main.addUpdateItem( update );
+		}
+		
+		public function update():void {
+			if( !stage ) return;
+			x = ( stage.stageWidth - Main.WIDTH ) / 2;
+			y = ( stage.stageHeight - Main.HEIGHT ) / 2;
+		}
+		
+	}
+	
+}

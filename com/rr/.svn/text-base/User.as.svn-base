@@ -1,0 +1,84 @@
+﻿package com.rr {
+	
+	import com.rr.PersonageParams;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class User {
+
+		public function User() {
+			throw new Error( "User is a static class" );
+		}
+		
+		public static var id:String;
+		public static var firstName:String;
+		public static var lastName:String;
+		public static var nickName:String;
+		public static var sex:int;
+		public static var photo:String;
+		public static var photoMedium:String;
+		public static var photoBig:String;
+		public static var nuts:Number;
+		public static var gold:Number;
+		public static var rating:Number;
+		public static var favorite:int;
+		public static var personages:XMLList;
+		public static var holes:XMLList;
+		public static var items:XMLList;
+		
+		private static var favoritePers:XML;
+		
+		public static function recordUser( personalData:Object, userData:XMLList, userItems:XMLList ):void {
+			
+			id = personalData.uid;
+			firstName = personalData.first_name;
+			lastName = personalData.last_name;
+			nickName = personalData.nick_name;
+			sex = int( personalData.sex );
+			photo = personalData.photo;
+			photoMedium = personalData.photo_medium;
+			photoBig = personalData.photo_big;
+			nuts = Number( userData.user.data.nuts );
+			gold = Number( userData.user.data.gold );
+			rating = Number( userData.user.data.rating );
+			favorite = int( userData.user.data.selectedPersonage );
+			personages = userData.personages.personage;
+			holes = userData.holes.hole;
+			items = userItems.items.item;
+		}
+		
+		// Возвращает любимого персонажа
+		public static function getFavoritePers():XML {
+			var pers:XML;
+			if( favoritePers ) {
+				pers = favoritePers;
+			} else {
+				for( var i:int = 0; i < personages.length(); i++ ) {
+					if( int( personages[ i ][ PersonageParams.NUM ] ) === favorite ) {
+						favoritePers = pers = personages[ i ];
+						break;
+					}
+				}
+			}
+			return pers;
+		}
+		
+		// Возвращает нору персонажа по его идентификатору
+		public static function getPersonageHole( personage_id:String ):XML {
+			var hole:XML;
+			for( var i:int = 0; i < holes.length(); i++ ) {
+				if( holes[ i ].num === personage_id ) {
+					hole = holes[ i ].num;
+					break;
+				}
+			}
+			hole = holes[ 0 ];
+			return hole;
+		}
+		
+	}
+	
+}

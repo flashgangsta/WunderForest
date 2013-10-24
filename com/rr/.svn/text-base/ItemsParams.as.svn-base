@@ -1,0 +1,22 @@
+﻿package com.rr {
+	
+	public class ItemsParams {
+		
+		public static const ID:String = "id";
+		public static const NAME:String = "name";
+		public static const URL:String = "url";
+		public static const PARAMS:String = "params";
+		public static const PRICE:String = "price";
+		public static const UNLOCK_PRICE:String = "unlockPrice";
+		public static const MIN_LEVEL:String = "minLvl";
+		public static const DURABLITY:String = "durablity";
+		public static const TYPE:String = "type";
+		public static const ICO:String = "ico";
+		
+		public function ItemsParams() {
+			throw new Error( "ItemsParams is static class." );
+		}
+
+	}
+	
+}

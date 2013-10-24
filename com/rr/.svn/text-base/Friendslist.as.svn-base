@@ -1,0 +1,251 @@
+﻿package com.rr {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import flash.display.Sprite;
+	import com.flashgangsta.managers.ButtonManager;
+	import caurina.transitions.Tweener;
+	import com.rr.utils.AvatarLoader;
+	import com.flashgangsta.managers.MappingManager;
+	import flash.geom.Rectangle;
+	
+	
+	public class Friendslist extends MovieClip {
+		
+		private static const STEP_TIME:int = 13;
+		private static const DISABLED_BTN_ALPHA = .3;
+		
+		private var itemsContainer:Sprite = new Sprite();
+		private var maskRect:MovieClip;
+		private var prevOne:MovieClip;
+		private var prevFive:MovieClip;
+		private var prevAll:MovieClip;
+		private var nextOne:MovieClip;
+		private var nextFive:MovieClip;
+		private var nextAll:MovieClip;
+		private var leftBorder:MovieClip;
+		private var rightBorder:MovieClip;
+		private var addFriend:MovieClip;
+		private var tweenParams:Object;
+		private var startPosition:int;
+		private var currentPosition:int = 0;
+		private var maxPosition:int;
+		private var stepSize:int;
+		private var displayCount:int;
+		private var avatar:MovieClip;
+		private var avatarMotion:MovieClip;
+		private var inviteMe:MovieClip;
+		private var body:MovieClip;
+		
+		public function Friendslist() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			
+			trace( "Friendlist is init" );
+			
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			maskRect = lineMask_mc;
+			prevOne = prevOne_mc;
+			prevFive = prevFive_mc;
+			prevAll = prevAll_mc;
+			nextOne = nextOne_mc;
+			nextFive = nextFive_mc;
+			nextAll = nextAll_mc;
+			leftBorder = leftBorder_mc;
+			rightBorder = rightBorder_mc;
+			addFriend = addFriend_mc;
+			tweenParams = { useFrames: true, transition: "easeInOutQuad" };
+			avatar = avatar_mc;
+			avatarMotion = avatarMotion_mc;
+			inviteMe = inviteMe_mc;
+			body = body_mc;
+			
+			avatarMotion.gotoAndStop( 1 );
+			
+			if( Friends.allFriendsListLength ) {
+				var friend:Object = Friends.getFriendFromAll( Math.round( Math.random() * Friends.allFriendsListLength ) - 1 );
+				new AvatarLoader( friend[ Friends.PHOTO_MEDIUM ], avatar, AvatarLoader.SCALE_FILL, AvatarLoader.ALIGN_CENTER_TOP, onFriendToInviteLoaded );
+			}
+			
+			ButtonManager.addButton( addFriend, null, addFriendHandler );
+			
+			update();
+			
+			Main.addUpdateItem( update );
+			
+			fillFriends();
+		}
+		
+		/*
+		*	Заполняет ленту
+		*/
+		
+		private function fillFriends():void {
+			
+			trace( "Friends fillFriends(), friens length: " + Friends.friendsLength ) ;
+			
+			for( var i:int = 0; i < Friends.friendsLength; i++ ) {
+				var friendItem:FriendsListItem = new FriendsListItem( Friends.getFriend( i )[ Friends.PHOTO_MEDIUM ] );
+				friendItem.x = ( friendItem.width * i );
+				itemsContainer.addChild( friendItem );
+			}
+			
+			stepSize = addFriend.width;
+			addFriend.y = 0;
+			addFriend.x = friendItem ? ( stepSize * i ) : 0;
+			itemsContainer.addChild( addFriend );
+			
+			
+			//Добавляем кнопки добавления друга:
+			
+			for( var j:int = 1; j < 6 - Friends.friendsLength; j++ ) {
+				var addFriendCopy:MovieClip = new AddFriendButton();
+				addFriendCopy.x = ( stepSize * ( i + j ) );
+				itemsContainer.addChild( addFriendCopy );
+				ButtonManager.addButton( addFriendCopy, null, addFriendHandler );
+			}
+			
+			
+			displayCount = Math.floor( maskRect.width / stepSize );
+			maxPosition = Friends.friendsLength - displayCount + 1;
+			
+			itemsContainer.x = startPosition = maskRect.x + 5;
+			itemsContainer.y = maskRect.y;
+			addChild( itemsContainer );
+			
+			if( itemsContainer.width > maskRect.width ) {
+				itemsContainer.mask = maskRect;
+				ButtonManager.addButton( prevOne, null, goPrev );
+				ButtonManager.addButton( prevFive, null, goPrev );
+				ButtonManager.addButton( prevAll, null, goPrev );
+				ButtonManager.addButton( nextOne, null, goNext );
+				ButtonManager.addButton( nextFive, null, goNext );
+				ButtonManager.addButton( nextAll, null, goNext );
+				ButtonManager.setButtonEnable( prevOne, false, true, DISABLED_BTN_ALPHA );
+				ButtonManager.setButtonEnable( prevFive, false, true, DISABLED_BTN_ALPHA );
+				ButtonManager.setButtonEnable( prevAll, false, true, DISABLED_BTN_ALPHA );
+			} else {
+				prevOne.alpha = prevFive.alpha = prevAll.alpha = nextOne.alpha = nextFive.alpha = nextAll.alpha = leftBorder.alpha = rightBorder.alpha = DISABLED_BTN_ALPHA;
+			}
+		}
+		
+		/*
+		*	Матает вперёд
+		*/
+		
+		private function goNext( target:MovieClip ):void {
+			
+			if( currentPosition === 0 ) {
+				ButtonManager.setButtonEnable( prevOne, true, true );
+				ButtonManager.setButtonEnable( prevFive, true, true );
+				ButtonManager.setButtonEnable( prevAll, true, true );
+			}
+			
+			if( target === nextOne ) {
+				// сдвиг на 1
+				tweenParams.time = Friendslist.STEP_TIME;
+				currentPosition++;
+			} else if( target === nextFive ) {
+				// сдвиг на 5
+				tweenParams.time = Friendslist.STEP_TIME * 2;
+				currentPosition = Math.min( maxPosition, currentPosition + 5 );
+				tweenParams.x = startPosition - ( stepSize * currentPosition ); 
+			} else {
+				// сдвиг в конец
+				tweenParams.time = Friendslist.STEP_TIME * 2;
+				currentPosition = maxPosition;
+				tweenParams.x = startPosition - ( stepSize * currentPosition ); 
+			}
+			
+			tweenParams.x = startPosition - ( stepSize * currentPosition );
+			
+			if( currentPosition === maxPosition ) {
+				ButtonManager.setButtonEnable( nextOne, false, true, DISABLED_BTN_ALPHA );
+				ButtonManager.setButtonEnable( nextFive, false, true, DISABLED_BTN_ALPHA );
+				ButtonManager.setButtonEnable( nextAll, false, true, DISABLED_BTN_ALPHA );
+				ButtonManager.setButtonState( nextOne, ButtonManager.STATE_NORMAL );
+				ButtonManager.setButtonState( nextFive, ButtonManager.STATE_NORMAL );
+				ButtonManager.setButtonState( nextAll, ButtonManager.STATE_NORMAL );
+			}
+			
+			if( Tweener.isTweening( itemsContainer ) ) {
+				tweenParams.transition = "easeOutQuad";
+				tweenParams.onComplete = resetTransition;
+			}
+			
+			Tweener.addTween( itemsContainer, tweenParams );
+		}
+		
+		
+		/*
+		*	Матает назад
+		*/
+		
+		private function goPrev( target:MovieClip ):void {
+			
+			if( currentPosition === maxPosition ) {
+				ButtonManager.setButtonEnable( nextOne, true, true );
+				ButtonManager.setButtonEnable( nextFive, true, true );
+				ButtonManager.setButtonEnable( nextAll, true, true );
+			}
+			
+			if( target === prevOne ) {
+				// сдвиг на 1
+				tweenParams.time = Friendslist.STEP_TIME;
+				currentPosition--;
+			} else if( target === prevFive ) {
+				// сдвиг на 5
+				tweenParams.time = Friendslist.STEP_TIME * 2;
+				currentPosition = Math.max( 0, currentPosition - 5 );
+			} else {
+				tweenParams.time = Friendslist.STEP_TIME * 2;
+				currentPosition = 0;
+			}
+			
+			tweenParams.x = startPosition - ( stepSize * currentPosition );
+			
+			if( currentPosition === 0 ) {
+				ButtonManager.setButtonEnable( prevOne, false, true, DISABLED_BTN_ALPHA );
+				ButtonManager.setButtonEnable( prevFive, false, true, DISABLED_BTN_ALPHA );
+				ButtonManager.setButtonEnable( prevAll, false, true, DISABLED_BTN_ALPHA );
+				ButtonManager.setButtonState( prevOne, ButtonManager.STATE_NORMAL );
+				ButtonManager.setButtonState( prevFive, ButtonManager.STATE_NORMAL );
+				ButtonManager.setButtonState( prevAll, ButtonManager.STATE_NORMAL );
+			}
+			
+			if( Tweener.isTweening( itemsContainer ) ) {
+				tweenParams.transition = "easeOutQuad";
+				tweenParams.onComplete = resetTransition;
+			}
+			
+			Tweener.addTween( itemsContainer, tweenParams );
+		}
+		
+		private function resetTransition():void {
+			tweenParams.transition = "easeInOutQuad";
+		}
+		
+		private function addFriendHandler( target:MovieClip ):void {
+			Main.vkCon.callMethod( "showInviteBox" );
+		}
+		
+		private function onFriendToInviteLoaded():void {
+			ButtonManager.addButton( avatarMotion, null, addFriendHandler );
+			addChild( inviteMe );
+			inviteMe.alpha = 0;
+			inviteMe.visible = true;
+			Tweener.addTween( inviteMe, { alpha: 1, y: inviteMe.y - 10, useFrames: true, time: 20, delay: 10, transition: "OutCubic" } );
+		}
+		
+		private function update():void {
+			var rect:Rectangle = Main.screenController.getScreenRect();
+			y = rect.y + rect.height - body.height;
+			x = MappingManager.setInCenter( rect.width, body.width ) + rect.x;
+		}
+		
+	}
+	
+}

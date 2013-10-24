@@ -1,0 +1,44 @@
+package com.rr.utils 
+{
+	import com.flashgangsta.managers.MappingManager;
+	import fl.text.TLFTextField;
+	import flash.display.MovieClip;
+	import flash.text.TextFieldAutoSize;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class ComponentManager {
+		
+		public function ComponentManager() {
+			
+		}
+		
+		public function fillBuyLabelButton( button:MovieClip, price:int, currency:String ):void {
+			button.label_mc;
+			
+			var priceLabel:TLFTextField = button.label_mc.price_txt;
+			var prefixLabel:TLFTextField = button.label_mc.prefix_txt;
+			var priceIco:MovieClip = button.label_mc.ico_mc;
+			var maxWidth:int = button.body_mc.width;
+			var labelWidth:int;
+			
+			priceIco.gotoAndStop( currency );
+			priceLabel.text = TextConverter.getNumber( price );
+			priceLabel.autoSize = TextFieldAutoSize.LEFT;
+			
+			labelWidth = priceLabel.x + priceLabel.textWidth;
+			
+			var icoMargin:int = priceIco.x - prefixLabel.width;
+			var priceMargin:int = priceLabel.x - prefixLabel.width;
+			
+			prefixLabel.x = MappingManager.setInCenter( maxWidth, labelWidth ) - 5;
+			priceIco.x = prefixLabel.x + prefixLabel.width + icoMargin;
+			priceLabel.x = prefixLabel.x + prefixLabel.width + priceMargin;
+		}
+		
+	}
+
+}

@@ -1,0 +1,320 @@
+﻿package com.rr.pages {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import flash.display.Sprite;
+	import com.flashgangsta.managers.ButtonManager;
+	import caurina.transitions.Tweener;
+	
+	
+	public class Showcase extends MovieClip {
+		
+		public const LENGTH:int = 5;
+		
+		public var pager:Pager
+		
+		private const MARGIN:int = 13;
+		private const CONTAINER_MARGIN:int = 7;
+		private const DISABLE_ARROW_ALPHA:Number = .2;
+		
+		private var turn:Boolean;
+		private var prevBtn:MovieClip;
+		private var nextBtn:MovieClip;
+		private var maskObj:MovieClip;
+		private var container:Sprite;
+		private var _data:XMLList;
+		private var step:int;
+		private var oldStep:int;
+		private var maxStep:int;
+		private var motionTime:int = 20;
+		private var motionParams:Object = { useFrames: true, time: motionTime, transition: "easeInOutQuad" , onUpdate: onMove };
+		private var stepSize:int;
+		private var finalStepSize:int;
+		private var finalStepLength:int;
+		private var items:Array = [];
+		private var firstItem:int;
+		private var lastItem:int;
+		
+		public function Showcase() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			prevBtn = prev_mc;
+			nextBtn = next_mc;
+			maskObj = showcaseMask_mc;
+			container = new Sprite();
+			
+			container.x = maskObj.x;
+			container.y = maskObj.y + CONTAINER_MARGIN;
+			
+			addChild( container );
+			
+			setChildIndex( container, 0 );
+			
+			ButtonManager.addButton( prevBtn, null, goPrev );
+			ButtonManager.addButton( nextBtn, null, goNext );
+			
+			if( turn ) {
+				fill( _data );
+				turn = false;
+			}
+			
+		}
+		
+		/*
+		 *
+		 *	Заполняет магаз
+		 * 
+		 */
+		
+		public function fill( data:XMLList ):void {
+			_data = data;
+			
+			if( !container ) {
+				turn = true;
+				return;
+			} else {
+				container.x = maskObj.x;
+			}
+			
+			clear();
+			
+			var lineLen:int = Math.min( data.length(), LENGTH + 1 );
+			
+			ButtonManager.setButtonEnable( prevBtn, false, true, DISABLE_ARROW_ALPHA );
+			ButtonManager.setButtonEnable( nextBtn, lineLen > LENGTH, true, DISABLE_ARROW_ALPHA );
+			
+			if ( !_data.length() ) {
+				//Предметов нет
+				return;
+			}
+			
+			maxStep = Math.ceil( ( data.length() - LENGTH ) / LENGTH );
+			
+			for( var i:int = 0; i < lineLen; i++ ) {
+				var item:ShowcaseItem = new ShowcaseItem( data[ i ] );
+				item.x = ( item.width + MARGIN ) * i;
+				items.push( item );
+				container.addChild( item );
+				container.mask = maskObj;
+				maskObj.alpha = .2;
+			}
+			
+			firstItem = 0;
+			lastItem = lineLen - 1;
+			
+			stepSize = ( item.width + MARGIN ) * LENGTH;
+			finalStepLength = data.length() - ( Math.floor( data.length() / LENGTH ) * LENGTH );
+			finalStepSize = ( item.width + MARGIN ) * finalStepLength;
+			
+			
+			
+		}
+		
+		// При клике на страницу
+		
+		public function changePage( pageNum:int ):void {
+			oldStep = step;
+			step = pageNum;
+			staticGo();
+			
+			// enabled для кнопки назад
+			if( pageNum === 0 ) {
+				ButtonManager.setButtonEnable( prevBtn, false, true, DISABLE_ARROW_ALPHA );
+			} else {
+				if( !prevBtn.enabled ) {
+					ButtonManager.setButtonEnable( prevBtn, true, true, DISABLE_ARROW_ALPHA );
+				}
+			}
+			
+			// enabled для кнопки вперёд
+			if( step === maxStep ) {
+				ButtonManager.setButtonEnable( nextBtn, false, true, DISABLE_ARROW_ALPHA );
+			} else {
+				if( !nextBtn.enabled ) {
+					ButtonManager.setButtonEnable( nextBtn, true, true, DISABLE_ARROW_ALPHA );
+				}
+			}
+		}
+		
+		public function getPagesLength():int {
+			
+			var value:int = maxStep ? maxStep + 1 : Math.ceil( ( _data.length() ) / LENGTH );
+			
+			return value;
+		}
+		
+		private function clear():void {
+			for( var j:int = 0; j < items.length; j++ ) {
+				if( items[ j ] ) container.removeChild( items[ j ] );
+			}
+			
+			items = [];
+			step = 0;
+			maxStep = 0;
+			oldStep = 0;
+		}
+		
+		// Один шаг назад
+		
+		private function goPrev( target:MovieClip ):void {
+			oldStep = step;
+			step --;
+			go();
+			if( step === 0 ) ButtonManager.setButtonEnable( prevBtn, false, true, DISABLE_ARROW_ALPHA );
+			if( step === maxStep - 1 ) ButtonManager.setButtonEnable( nextBtn, true, true, DISABLE_ARROW_ALPHA );
+			
+		}
+		
+		// Один шаг вперёд
+		
+		private function goNext( target:MovieClip ):void {
+			oldStep = step;
+			step ++;
+			go();
+			if( step === maxStep ) ButtonManager.setButtonEnable( nextBtn, false, true, DISABLE_ARROW_ALPHA );
+			if( step === 1 ) ButtonManager.setButtonEnable( prevBtn, true, true, DISABLE_ARROW_ALPHA );
+		}
+		
+		// Анимация перехода
+		
+		private function go():void {
+			if( Tweener.isTweening( container ) ) {
+				motionParams.transition = "easeOutQuad";
+				motionParams.onComplete = resetTransition;
+			}
+			
+			if ( step === maxStep ) {
+				motionParams.x = maskObj.x - ( stepSize * ( step - Math.min( 1, finalStepLength ) ) ) - finalStepSize;
+				if( finalStepLength ) motionParams.time = motionTime / LENGTH * finalStepLength;
+			} else if ( step === maxStep - 1 && oldStep === maxStep ) {
+				motionParams.x = maskObj.x - ( stepSize * step );
+				if( finalStepLength ) motionParams.time = motionTime / LENGTH * finalStepLength;
+			} else {
+				motionParams.x = maskObj.x - ( stepSize * step );
+				motionParams.time = motionTime;
+			}
+
+			Tweener.addTween( container, motionParams );
+			onMove();
+			
+			var newPage:int = Math.floor( step );
+			
+			if( pager.getCurrentPage() !== newPage + 1 ) {
+				pager.setPageSelection( newPage + 1 );
+			}
+			
+		}
+		
+		// Переход без анимации
+		
+		private function staticGo():void {
+			
+			if ( step === maxStep ) {
+				container.x = maskObj.x - ( stepSize * ( step - Math.min( 1, finalStepLength ) ) ) - finalStepSize;
+			} else {
+				container.x = maskObj.x - ( stepSize * step );
+			}
+			
+			var first:ShowcaseItem = ShowcaseItem( items[ firstItem ] );
+			var last:ShowcaseItem = ShowcaseItem( items[ lastItem ] );
+			
+			//finalStepLength
+			
+			var firstNum:int = ( step * LENGTH - 1 );
+			var lastNum:int = firstNum + LENGTH + 1;
+			
+			if ( step === maxStep ) firstNum -= LENGTH - finalStepLength;
+			
+			for ( var i:int = 0; i < items.length; i++ ) {
+				
+				if ( i < firstNum || i > lastNum ) {
+					var item:ShowcaseItem = ShowcaseItem( items[ i ] );
+					if ( item ) {
+						item.hide();
+					}
+				}
+			}
+			
+			item = null;
+			
+			for ( i = Math.max( 0, firstNum ); i <= lastNum; i++ ) {
+				if ( i > _data.length() - 1 ) break;
+				
+				item = i < items.length ? ShowcaseItem( items[ i ] ) : null;
+				
+				if ( item ) {
+					item.show();
+				} else {
+					item = new ShowcaseItem( _data[ i ] );
+					item.x = ( item.width + MARGIN ) * i;
+					items[ i ] = item;
+					container.addChild( item );
+				}
+			}
+			
+			firstItem = Math.max( 0, firstNum );
+			lastItem = i - 1;
+			
+		}
+		
+		private function resetTransition():void {
+			motionParams.transition = "easeInOutQuad";
+			onMove();
+		}
+		
+		private function onMove():void {
+			
+			var first:ShowcaseItem = ShowcaseItem( items[ firstItem ] );
+			var last:ShowcaseItem = ShowcaseItem( items[ lastItem ] );
+			
+			var mustLastItem:int = Math.min( Math.floor( ( maskObj.x - ( container.x ) ) / ( first.width + MARGIN ) ) + LENGTH, _data.length() - 1 );
+			var mustFirstItem:int = Math.floor( ( maskObj.x - ( container.x ) ) / ( first.width + MARGIN ) );
+			
+			// Обновление элементов слева
+			
+			if( ( first.x + ( ( first.width + MARGIN ) * 2 ) ) + container.x <= maskObj.x ) {
+				first.hide();
+				firstItem ++;
+			} else if( first.x + container.x >= maskObj.x && firstItem > 0 ) {
+				while( firstItem > mustFirstItem ) {
+					firstItem --;
+					if ( items[ firstItem ] ) {
+						first = ShowcaseItem( items[ firstItem ] );
+						first.show();
+					} else {
+						first = new ShowcaseItem( _data[ firstItem ] );
+						first.x = ( first.width + MARGIN ) * firstItem;
+						items[ firstItem ] = first;
+						container.addChild( first );
+					}
+				}
+			}
+			
+			// Обновление элементов справа
+			
+			if( last.x + container.x < maskObj.width + maskObj.x && lastItem < _data.length() - 1 ) {
+				while( lastItem < mustLastItem ) {
+					lastItem ++;
+					if( lastItem < items.length ) {
+						last = ShowcaseItem( items[ lastItem ] );
+						last.show();
+					} else {
+						last = new ShowcaseItem( _data[ lastItem ] );
+						last.x = ( last.width + MARGIN ) * lastItem;
+						items.push( last );
+						container.addChild( last );
+					}
+				}
+			} else if( last.x - ( last.width + MARGIN ) + container.x > maskObj.width + maskObj.x ) {
+				lastItem --;
+				last.hide();
+			}
+		}
+		
+	}
+	
+}

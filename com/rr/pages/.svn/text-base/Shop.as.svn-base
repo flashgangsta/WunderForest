@@ -1,0 +1,138 @@
+﻿package com.rr.pages {
+	
+	import caurina.transitions.Tweener;
+	import com.rr.events.ShopFilterEvent;
+	import com.rr.utils.Definitier;
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.Main;
+	import com.flashgangsta.managers.MappingManager;
+	import flash.geom.Rectangle;
+	import fl.text.TLFTextField;
+	import com.rr.Items;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class Shop extends MovieClip {
+		
+		public static const TAB_FAY:String = "fay";
+		public static const TAB_BOAR:String = "boars";
+		
+		internal var currentTab:String = Shop.TAB_FAY;
+		
+		private var showcase:Showcase;
+		private var tabBtn:MovieClip;
+		private var boarTabTitle:TLFTextField;
+		private var boarTabName:TLFTextField;
+		private var fayTabTitle:TLFTextField;
+		private var fayTabName:TLFTextField;
+		private var pager:Pager;
+		private var shopFilters:ShopFilters;
+		private var area:MovieClip;
+		
+		public function Shop() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			boarTabTitle = boarTabTitle_txt;
+			boarTabName = boarTabName_txt;
+			fayTabTitle = fayTabTitle_txt;
+			fayTabName = fayTabName_txt;
+			showcase = showcase_mc;
+			area = area_mc;
+			shopFilters = filters_mc;
+			
+			boarTabTitle.mouseChildren = false;
+			boarTabName.mouseChildren = false;
+			boarTabTitle.mouseEnabled = false;
+			boarTabName.mouseEnabled = false;
+			fayTabTitle.mouseChildren = false;
+			fayTabName.mouseChildren = false;
+			fayTabTitle.mouseEnabled = false;
+			fayTabName.mouseEnabled = false;
+			
+			pager = pager_mc;
+			
+			showShop();
+			Main.addUpdateItem( update );
+			
+			showcase.pager = pager;
+			shopFilters.addEventListener( ShopFilterEvent.FILTER_CHANGED, onFilterChanged );
+			shopFilters.addEventListener( ShopFilterEvent.SUBFILTER_CHANGED, onSubfilterChanged );
+			
+			addMotion();
+			
+		}
+		
+		private function showShop():void {
+			
+			gotoAndStop( currentTab );
+			
+			if( currentTab === Shop.TAB_FAY ) {
+				// Фея
+				tabBtn = boarBtn_mc;
+				
+			} else {
+				tabBtn = fayBtn_mc;
+				// Кабаны
+			}
+			
+			ButtonManager.addButton( tabBtn, null, changeTab );
+
+		}
+		
+		private function changeTab( target:MovieClip = null ):void {
+			ButtonManager.removeButton( target );
+			currentTab = currentTab === Shop.TAB_FAY ? Shop.TAB_BOAR : Shop.TAB_FAY;
+			shopFilters.setFilter();
+			showShop();
+			
+		}
+		
+		public function addMotion():void {
+			if ( hasEventListener( Event.ADDED_TO_STAGE ) ) return;
+			var step:int = 200;
+			y += step;
+			Tweener.addTween( this, { y: y - step, useFrames: true, time: 15, transition: "easeOutCubic", onComplete: onAddMotionComplete } );
+		}
+		
+		private function onAddMotionComplete():void {
+			Definitier.addDefinition( shopFilters.currentFilterBtns, shopFilters.currentSubFiltersBtns );
+		}
+		
+		public function update():void {
+			if( !stage ) return;
+			x = MappingManager.setInCenter( stage.stageWidth, area.width );
+			y = MappingManager.setInCenter( stage.stageHeight, area.height ) + 35;
+		}
+		
+		private function changePage( pageNum:int ):void {
+			trace( "page changed to " + pageNum );
+			showcase.changePage( pageNum - 1 );
+		}
+		
+		private function onFilterChanged( event:ShopFilterEvent ):void {
+			shopFilters.changeSubFilter( shopFilters.currentFilter.name );
+		}
+		
+		private function onSubfilterChanged( event:ShopFilterEvent ):void {
+			trace( shopFilters.currentFilter.name + "/" + shopFilters.currentSubFilter.name/*, "types:\n", event.subfilterData*/ );
+			fillShowcase( event.subfilterData );
+		}
+		
+		private function fillShowcase( data:XMLList ):void {
+			showcase.fill( data );
+			pager.setPages( showcase.getPagesLength(), changePage );
+
+		}
+		
+	}
+	
+}

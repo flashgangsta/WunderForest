@@ -1,0 +1,88 @@
+﻿package com.rr.pages.personagesShop {
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.events.ColorSliderEvent;
+	import com.rr.personage.Personage;
+	import com.rr.User;
+	import fl.text.TLFTextField;
+	import flash.display.MovieClip;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 *
+	 */
+	
+	public class PersBoard extends MovieClip {
+		
+		internal var maleBtn:MovieClip; // Кнопка М
+		internal var femaleBtn:MovieClip;	//Кнопка Ж
+		
+		private var nameLabel:TLFTextField;	//Имя перса
+		private var nickLabel:TLFTextField; //Прозвище
+		private var hpLabel:TLFTextField; // Хелсы
+		private var moodLabel:TLFTextField; // Настроение
+		private var nerveLabel:TLFTextField;	//Нервы
+		private var satietyLabel:TLFTextField;	//Сытость
+		private var colorSlider:ColorSlider; //Слайдер цвета
+		private var descriptionLabel:TLFTextField; //Описание персонажа
+		private var lockIco:MovieClip; //Иконка замка
+		private var lockLabel:TLFTextField; //Текст замка
+		private var buyBtn:MovieClip; //Кнопка Купить
+		private var _personage:Personage;
+		
+		
+		
+		public function PersBoard() {
+			nameLabel = name_txt;
+			nickLabel = nick_txt;
+			
+			hpLabel = hpLabel_txt;
+			moodLabel = moodLabel_txt;
+			nerveLabel = nerveLabel_txt;
+			satietyLabel = satietyLabel_txt;
+			
+			maleBtn = male_mc;
+			femaleBtn = female_mc;
+			
+			colorSlider = colorSlider_mc;
+			
+			descriptionLabel = description_txt;
+			
+			lockIco = lockIco_mc;
+			lockLabel = lockLabel_txt;
+			
+			buyBtn = buyBtn_mc;
+			
+			ButtonManager.addButtonGroup( [ maleBtn, femaleBtn ], false, User.sex === 1 ? femaleBtn : maleBtn, false, ButtonManager.STATE_PRESSED, changeSex );
+			
+			colorSlider.addEventListener( ColorSliderEvent.DRAGGED, changePersColor );
+			
+		}
+		
+		public function fillPersParams( personage:Personage ):void {
+			_personage = personage;
+			nameLabel.text = personage.getName();
+			hpLabel.text = personage.getBasicHP().toString();
+			descriptionLabel.text = personage.getDescription();
+			
+			//lockIco.visible = User
+			
+		}
+		
+		/**
+		 * 
+		 * @private methods
+		 * 
+		 */
+		
+		private function changePersColor( event:ColorSliderEvent ):void {
+			_personage.setColor( event.color );
+		}
+		
+		private function changeSex( target:MovieClip ):void {
+			_personage.changeSex( target === maleBtn ? Personage.SEX_MALE : Personage.SEX_FEMALE );
+		}
+		
+	}
+
+}

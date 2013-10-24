@@ -1,0 +1,150 @@
+﻿package com.rr.pages {
+	import caurina.transitions.Tweener;
+	import flash.display.MovieClip;
+	import flash.display.Sprite;
+	import flash.events.Event;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class CellarItemsContainer extends MovieClip {
+		
+		public static const LENGTH:int = 15;
+		public static const MODE_FOR_HOLE:String = "forhole";
+		public static const MODE_DEFAULT:String = "other";
+		
+		private static const LENGTH_H_DEFAULT:int = 5;
+		private static const LENGTH_H_FOR_HOLE:int = 7;
+		private static const LENGTH_V:int = 3;
+		private static const ITEM_MARGIN:int = 8;
+		private static const NEXT_BTN_X_DEFAULT:int = 492;
+		private static const NEXT_BTN_X_HOLE:int = 662;
+		private static const SADOW_MARGIN:int = 30;
+		private static const X_DEFAULT:int = 206;
+		private static const X_FOR_HOLE:int = 36;
+		private static const PAGER_MARGIN:int = 40;
+		
+		private var mode:String = MODE_DEFAULT;
+		private var _data:XMLList;
+		private var container:Sprite;
+		private var maskObj:MovieClip;
+		private var rightShadow:MovieClip;
+		private var prevBtn:MovieClip;
+		private var nextBtn:MovieClip;
+		private var items:Array = [];
+		private var modeMotion:Object = { useFrames: true, time: 15, transition: "easeInOutCubic" };
+		private var pager:Pager;
+		
+		public function CellarItemsContainer() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			maskObj = mask_mc;
+			rightShadow = rightShadow_mc;
+			prevBtn = prev_mc;
+			nextBtn = next_mc;
+			pager = Cellar( parent ).pager;
+			
+			if ( _data ) fill( _data );
+		}
+		
+		public function fill( data:XMLList ):void  {
+			_data = data;
+			
+			if ( hasEventListener( Event.ADDED_TO_STAGE ) ) return;
+			
+			if ( !container ) {
+				container = new Sprite();
+				container.x = maskObj.x;
+				container.y = maskObj.y;
+				addChild( container );
+			}
+			
+			if ( items.length ) clear();
+			
+			var modeFactor:int = mode === CellarItemsContainer.MODE_DEFAULT ? LENGTH_H_DEFAULT : LENGTH_H_FOR_HOLE;
+			var maxIterator:int = modeFactor * LENGTH_V;
+			
+			for ( var i:int = 0; i < maxIterator; i++ ) {
+				var j:int = Math.floor( i / modeFactor ) * LENGTH_H_FOR_HOLE + ( i % modeFactor );
+				var item:CellarItem = item = items[ i ] = this[ "item" + j + "_mc" ];
+				item.fill( _data[ i ] );
+			}
+			
+		}
+		
+		public function clear():void {
+			for ( var i:int = 0; i < items.length; i++ ) {
+				var item = items[ i ];
+			}
+		}
+		
+		public function changeMode( to:String ):void {
+			
+			if ( !visible ) show();
+			
+			if ( mode === to ) return;
+			mode = to;
+			
+			if ( to === CellarItemsContainer.MODE_FOR_HOLE ) {
+				
+				//modeMotion.delay = 3;
+				
+				modeMotion.x = CellarItemsContainer.NEXT_BTN_X_HOLE;
+				Tweener.addTween( nextBtn, modeMotion );
+				
+				modeMotion.x = CellarItemsContainer.X_FOR_HOLE;
+				Tweener.addTween( this, modeMotion );
+				
+				modeMotion.x = CellarItemsContainer.X_FOR_HOLE + CellarItemsContainer.PAGER_MARGIN;
+				Tweener.addTween( pager, modeMotion );
+				
+				modeMotion.x = CellarItemsContainer.NEXT_BTN_X_HOLE - CellarItemsContainer.SADOW_MARGIN;
+				modeMotion.onComplete = onModeChanged;
+				Tweener.addTween( rightShadow, modeMotion );
+			
+			} else {
+				
+				//modeMotion.delay = 0;
+				
+				modeMotion.x = CellarItemsContainer.NEXT_BTN_X_DEFAULT;
+				Tweener.addTween( nextBtn, modeMotion );
+				
+				modeMotion.x = CellarItemsContainer.X_DEFAULT;
+				Tweener.addTween( this, modeMotion );
+				
+				modeMotion.x = CellarItemsContainer.X_DEFAULT + CellarItemsContainer.PAGER_MARGIN;
+				Tweener.addTween( pager, modeMotion );
+				
+				modeMotion.x = CellarItemsContainer.NEXT_BTN_X_DEFAULT - CellarItemsContainer.SADOW_MARGIN;
+				modeMotion.onComplete = onModeChanged;
+				Tweener.addTween( rightShadow, modeMotion );
+			}
+		}
+		
+		public function hide():void {
+			visible = false;
+		}
+		
+		public function show():void {
+			visible = true;
+		}
+		
+		private function onModeChanged():void {
+			trace( "onModeChanged" );
+			if ( mode === CellarItemsContainer.MODE_FOR_HOLE ) {
+				maskObj.width = 598;
+			} else {
+				maskObj.width = 428;
+			}
+		}
+		
+		
+	}
+	
+}

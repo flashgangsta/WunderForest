@@ -1,0 +1,25 @@
+﻿package com.rr.utils {
+	
+	import flash.globalization.NumberFormatter;
+	import flash.globalization.LocaleID;
+	
+	public class TextConverter {
+		
+		public function TextConverter() {
+			throw new Error( "TextConcerter is a static class" );
+		}
+		
+		public static function getBold( text:String ):String {
+			return "<b>" + text + "</b>";
+		}
+		
+		public static function getNumber( number:Number ):String {
+			var nf:NumberFormatter = new NumberFormatter( LocaleID.DEFAULT );
+			nf.trailingZeros = false;
+			return nf.formatNumber( number );
+			
+		}
+		
+	}
+	
+}

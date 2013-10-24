@@ -1,0 +1,179 @@
+﻿package com.rr.pages {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import flash.display.BitmapData;
+	import com.flashgangsta.managers.ButtonManager;
+	import flash.display.Shape;
+	import caurina.transitions.Tweener;
+	import flash.display.Sprite;
+	import com.rr.Personages;
+	import com.rr.User;
+	import com.rr.PersonageParams;
+	import flash.geom.Rectangle;
+	import com.rr.personage.Personage;
+	import com.rr.HoleParams;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class Room extends MovieClip {
+		
+		private static const FLOORS:Array  = [ Floor1, Floor2 ];
+		
+		private var _config:Object;
+		
+		private var floor:MovieClip; // Пол
+		private var wall:MovieClip; // Стена
+		private var door:MovieClip; // Дверь
+		private var window:MovieClip; // Окно
+		private var board:MovieClip; // Доска
+		private var pig:MovieClip; // Копилка
+		private var bag:MovieClip; // Рюкзак
+		private var repo:MovieClip; // Склад
+		private var switcher:MovieClip; // Переключатель света
+		private var floorBmd:BitmapData; // Битмап пола
+		private var roomShadow:Shape; // Тень комнаты при выключеном свете
+		private var light:Boolean = true; // Флаг света
+		private var lightMotion:Object = { useFrames: true, time: 1, transition: "easeInCubic" }; // Анимация включения света
+		private var personagePlace:MovieClip; // Место персонажа
+		private var persContainer:Sprite; // Контейнер персонажа
+		private var roomData:XML; // Параметры комнаты
+		private var persData:XML; // Параметры персонажа
+		private var lamp:MovieClip; // Лампа
+		private var cord:MovieClip; // Шнур лампы
+		
+		internal var personage:Personage; // Персонаж
+		
+		public function Room( config:Object = null ) {
+			_config = config;
+			if( config ) {
+				addEventListener( Event.ADDED_TO_STAGE, init );
+			}
+		}
+		
+		public function setConfig( config:Object ):void {
+			_config = config;
+			if( !hasEventListener( Event.ADDED_TO_STAGE ) ) addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			floor = floor_mc;
+			wall = wall_mc;
+			door = door_mc;
+			window = window_mc;
+			board = board_mc;
+			pig = pig_mc;
+			bag = bag_mc;
+			repo = repo_mc;
+			switcher = switcher_mc;
+			personagePlace = personagePlace_mc;
+			roomData = _config.room;
+			persData = _config.pers;
+			lamp = lamp_mc;
+			cord = cord_mc;
+			
+			ButtonManager.addButton( switcher, null, changeLightMode );
+			ButtonManager.addButton( lamp.hit_mc, null, changeLightMode );
+			ButtonManager.addButton( pig );
+			ButtonManager.addButton( repo );
+			ButtonManager.addButton( bag );
+			
+			lamp.gotoAndStop( lamp.totalFrames );
+			
+			fillFloor();
+			fillBoard();
+			addPers();
+		}
+		
+		// Накладывает половой настил
+		
+		private function fillFloor():void {
+			
+			var currentFloor:Class;
+			
+			if( !_config ) {
+				currentFloor = Room.FLOORS[ 0 ];
+			} else {
+				currentFloor = Room.FLOORS [ int( roomData[ HoleParams.FLOOR ] ) - 1 ];
+			}
+			
+			floorBmd = new currentFloor();
+			
+			floor.graphics.beginBitmapFill( floorBmd );
+			floor.graphics.drawRect( 0, 0, floor.width, floor.height );
+			floor.graphics.endFill();
+			floor.removeChild( floor.body_mc );
+			floor.cacheAsBitmap = true;
+			
+		}
+		
+		// Заполняет доску
+		
+		private function fillBoard():void {
+			var message:String = "";
+			message += Number( persData[ PersonageParams.LOSS ] ) + Number( persData[ PersonageParams.WINS ] ) + " боёв\n";
+			message += persData[ PersonageParams.WINS ] + " побед\n";
+			message += persData[ PersonageParams.LOSS ] + " поражений";
+			board.label_txt.text = message;
+		}
+		
+		// Включает и выключает свет
+		
+		private function changeLightMode( target:MovieClip = null ):void {
+			if( !roomShadow && light && !Hole( parent ).roomShadow ) {
+				roomShadow = new Shape();
+				roomShadow.graphics.beginFill( 0 );
+				roomShadow.graphics.drawRect( 0, 0, stage.stageWidth, stage.stageHeight );
+				roomShadow.graphics.endFill();
+				roomShadow.alpha = 0;
+				Hole( parent ).addLightRect( roomShadow );
+			} else if( Hole( parent ).roomShadow ) {
+				roomShadow = Hole( parent ).roomShadow;
+			}
+			
+			if( light ) {
+				lightMotion.alpha = .8;
+				lightMotion.onComplete = null;
+				roomShadow.visible = true;
+			} else {
+				lightMotion.alpha = 0;
+				lightMotion.onComplete = function() {
+					this.visible = false;
+				};
+			}
+			if( !lamp.hasEventListener( Event.ENTER_FRAME ) ) {
+				lamp.addEventListener( Event.ENTER_FRAME, playLampMotion );
+			}
+			Tweener.addTween( roomShadow, lightMotion );
+			light = !light;
+		}
+		
+		// Проигрывает анимацию лампы
+		
+		private function playLampMotion( event:Event ):void {
+			light ? lamp.nextFrame() : lamp.prevFrame();
+			if( lamp.currentFrame === lamp.totalFrames || lamp.currentFrame === 1 ) {
+				lamp.removeEventListener( Event.ENTER_FRAME, playLampMotion );
+			}
+		}
+		
+		// Выводит персонажа
+		
+		private function addPers():void {
+			
+			persContainer = new Sprite();
+			persContainer.x = personagePlace.x;
+			persContainer.y = personagePlace.y;
+			addChild( persContainer );
+			
+			personage = new Personage( persData, persContainer, new Rectangle( 0, 0, personagePlace.width, personagePlace.height ) );
+			
+		}
+		
+	}
+}

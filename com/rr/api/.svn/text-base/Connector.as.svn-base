@@ -1,0 +1,103 @@
+﻿package com.rr.api {
+	import flash.net.URLLoader;
+	import flash.net.URLRequest;
+	import flash.events.Event;
+	import flash.events.IOErrorEvent;
+	import com.adobe.crypto.MD5;
+	import flash.net.URLRequestMethod;
+	import flash.net.URLVariables;
+	
+	public class Connector {
+		
+		private static const PROCESSOR:String = "http://81.177.166.118/api.aspx";
+		
+		private var loader:URLLoader;
+		private var request:URLRequest;
+		private var completeHandler:Function;
+		private var errorHandler:Function;
+		private var _params:URLVariables;
+		private var id:String;
+		
+		public static var onClient:Boolean = false;
+		
+		public var currentMethod:String = null;
+		
+		
+		
+		public function Connector( user_id:String ) {
+			id = "1001";//user_id;
+		}
+		
+		
+		public function send( method:String, params:Object = null, onComplete:Function = null, onError:Function = null ):void {
+			currentMethod = method;
+			
+			if( loader ) {
+				loader.close();
+				removeLoader();
+			}
+			
+			if( params === null ) {
+				var params:Object = { user_id: id };
+			}
+			
+			params.method = method;
+			params.user_id = id;
+			params.sigh = MD5.hash( id + "LF@J$y67Dq#TV35" );
+			params.rnd = new Date().getTime();
+			
+			completeHandler = onComplete;
+			errorHandler = onError;
+			
+			loader = new URLLoader();
+			request = new URLRequest( Connector.PROCESSOR  );
+			request.method = URLRequestMethod.GET;
+			request.data = parseObject( params );
+			
+			loader.addEventListener( Event.COMPLETE, onSended );
+			loader.addEventListener( IOErrorEvent.IO_ERROR, onSendError );
+			
+			loader.load( request );
+		}
+		
+		public function parseObject( params:Object ):URLVariables {
+			var vars:URLVariables = new URLVariables();
+			for ( var param:String in params ) {
+				vars[ param ] = params[ param ];
+			}
+			return vars;
+		}
+		
+		private function onSended( event:Event ):void {
+			var response:XML = new XML( event.target.data );
+			var success:Boolean = Boolean( Number( response.success ) );
+			var params:XMLList = response.params;
+			
+			removeLoader();
+			
+			//trace( "---", this.currentMethod, "RESPONSE:\n", params );
+			
+			if( success ) {
+				trace( "###", this.currentMethod, "send complete" );
+				if( completeHandler !== null ) completeHandler( params );
+			} else {
+				trace( "###", this.currentMethod, "send error" );
+				if( errorHandler !== null ) errorHandler( params );
+			}
+		}
+		
+		private function onSendError( event:IOErrorEvent ):void {
+			trace( "###", this.currentMethod, "send server error" );
+			removeLoader();
+			if( errorHandler !== null ) errorHandler();
+		}
+		
+		private function removeLoader():void {
+			loader.removeEventListener( Event.COMPLETE, onSended );
+			loader.removeEventListener( IOErrorEvent.IO_ERROR, onSendError );
+			loader = null;
+		}
+		
+	}
+	
+}

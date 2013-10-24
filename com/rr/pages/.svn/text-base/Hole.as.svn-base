@@ -1,0 +1,191 @@
+﻿package com.rr.pages {
+	
+	import com.rr.PageViewer;
+	import com.rr.personage.Personage;
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.rr.Main;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.flashgangsta.managers.MappingManager;
+	import com.rr.User;
+	import com.rr.PersonageParams;
+	import flash.display.DisplayObject;
+	import flash.display.Shape;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class Hole extends MovieClip {
+		
+		/**
+		 * public properties
+		 */
+		
+		public var buttons:MovieClip; 		// Кнопки навигации комнаты
+		public var cursorBtns:MovieClip; 	// Кнопки смены режима курсора
+		public var roomShadow:Shape; 			// Тень комнаты
+		
+		/**
+		 * private properties
+		 */
+		
+		private var personages:MovieClip;
+		private var arrowBtn:MovieClip;
+		private var handBtn:MovieClip;
+		private var cellarBtn:MovieClip;
+		private var roomBtn:MovieClip;
+		private var buyBtn:MovieClip;
+		private var room:Room;
+		private var rightBtn:MovieClip;
+		private var leftBtn:MovieClip;
+		private var personagesLine:MovieClip;
+		private var maxSpeed:int = 30;
+		private var accel:Number = .5;
+		private var currentSpeed:Number = 1;
+		
+		
+		public function Hole() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+			addEventListener( Event.REMOVED_FROM_STAGE, onLeave );
+		}
+		
+		/**
+		 * private methods
+		 */
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			buttons = buttons_mc;
+			cursorBtns = cursors_mc;
+			arrowBtn = cursorBtns.arrow_mc;
+			handBtn = cursorBtns.hand_mc;
+			cellarBtn = buttons.cellar_mc;
+			roomBtn = buttons.room_mc;
+			buyBtn = buttons.buy_mc;
+			room = room_mc;
+			rightBtn = right_mc;
+			leftBtn = left_mc;
+			personagesLine = personagesLine_mc;
+			
+			ButtonManager.addButtonGroup( [ arrowBtn, handBtn ], true, arrowBtn, false, ButtonManager.STATE_PRESSED, changeCursorMode );
+			ButtonManager.addButtonGroup( [ roomBtn, cellarBtn ], true, roomBtn, false, ButtonManager.STATE_PRESSED, changeHoleMode );
+			
+			ButtonManager.addButton( buyBtn, null, goToPersShop );
+			ButtonManager.addButton( rightBtn, null, stopMove, stopMove, startMove );
+			ButtonManager.addButton( leftBtn, null, stopMove, stopMove, startMove );
+			
+			update();
+			Main.addUpdateItem( update );
+			
+			var favoritePers:XML = User.getFavoritePers();
+			var favoritePersRoom:XML = User.getPersonageHole( favoritePers[ PersonageParams.NUM ] );
+			
+			room.setConfig( { room: favoritePersRoom, pers: favoritePers } );
+			
+			onHoleMode();
+			
+		}
+		
+		private function startMove( target:MovieClip ):void {
+			target.addEventListener( Event.ENTER_FRAME, move );
+		}
+		
+		private function stopMove( target:MovieClip ):void {
+			if ( target.hasEventListener( Event.ENTER_FRAME ) ) {
+				target.removeEventListener( Event.ENTER_FRAME, move );
+				currentSpeed = 1;
+			}
+		}
+		
+		private function move( event:Event ):void {
+			var target:MovieClip = MovieClip( event.currentTarget );
+			
+			trace( "move" );
+			
+			if ( target === leftBtn ) {
+				room.x += currentSpeed;
+			} else {
+				room.x -= currentSpeed;
+			}
+			
+			if ( room.x > 0 ) {
+				stopMove( target );
+				room.x = 0;
+			} else if ( room.x < -( room.width - stage.stageWidth ) ) {
+				stopMove( target );
+				room.x = -( room.width - stage.stageWidth );
+			}
+			
+			if( currentSpeed < maxSpeed ) {
+				currentSpeed += accel;
+			}
+			
+		}
+		
+		private function changeCursorMode( target:MovieClip ):void {
+			if( target === arrowBtn ) {
+				room.personage.removeInteractive();
+			} else {
+				room.personage.setInteractive( room.personage.strokePersonage );
+			}
+		}
+		
+		private function goToPersShop( target:MovieClip ):void {
+			Main.pageViewer.setPage( PageViewer.PAGE_PERSONAGES_SHOP );
+			Main.header.resetSelection();
+		}
+		
+		private function onLeave( event:Event ):void {
+			trace( "Hole.onLeave()" );
+			if( room.personage ) room.personage.lock();
+		}
+		
+		/**
+		 * Public methods
+		 */
+		
+		public function onHoleMode():void {
+			Main.blockRect.hide();
+			ButtonManager.setSelectionOnGroup( roomBtn );
+			if( room.personage ) room.personage.unlock();
+		}
+		
+		public function onCellarMode():void {
+			room.personage.lock();
+		}
+		
+		public function update():void {
+			if( !stage ) return;
+			buttons.y = cursorBtns.y = stage.stageHeight - 157;
+			buttons.x = cursorBtns.x + cursorBtns.width + MappingManager.setInCenter( Main.settings.x - ( cursorBtns.x + cursorBtns.width ), buttons.width );
+			room.x = MappingManager.setInCenter( stage.stageWidth, room.width );
+		}
+		
+		public function changeHoleMode( target:MovieClip = null ):void {
+			if ( target === cellarBtn ) {
+				Main.blockRect.show( Main.pageViewer.currentPage );
+				Main.pageViewer.setPage( PageViewer.PAGE_CELLAR );
+				Main.header.resetSelection();
+				onCellarMode();
+				setChildIndex( buttons, this.numChildren - 1 );
+			} else {
+				Main.pageViewer.setPage( PageViewer.PAGE_HOLE );
+				Main.header.setSelection( Main.header.hole );
+				onHoleMode();
+			}
+		}
+		
+		
+		public function addLightRect( target:Shape ):void {
+			roomShadow = target;
+			addChild( roomShadow );
+			swapChildren( roomShadow, personagesLine );
+			
+		}
+		
+	}
+	
+}

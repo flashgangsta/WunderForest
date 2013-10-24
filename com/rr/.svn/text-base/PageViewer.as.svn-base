@@ -1,0 +1,146 @@
+﻿package com.rr {
+	
+	import com.rr.pages.Cellar;
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.rr.pages.Rating;
+	import com.rr.pages.Forest;
+	import com.rr.pages.Hole;
+	import com.rr.pages.personagesShop.PersonagesShop;
+	import com.rr.pages.Shop;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class PageViewer extends MovieClip {
+		
+		public static const PAGE_FOREST:String = "forest";
+		public static const PAGE_HOLE:String = "hole";
+		public static const PAGE_SHOP:String = "shop";
+		public static const PAGE_RATING:String = "rating";
+		public static const PAGE_PERSONAGES_SHOP:String = "personagesShop";
+		public static const PAGE_CELLAR:String = "cellar";
+		
+		public var currentPage:MovieClip;
+		public var forest:Forest;
+		public var rating:Rating;
+		public var hole:Hole;
+		public var personagesShop:PersonagesShop;
+		public var shop:Shop;
+		public var cellar:Cellar;
+		
+		private var body:MovieClip;
+		private var popupPage:Object;
+		
+		public function PageViewer() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			body = body_mc;
+			update();
+			Main.addUpdateItem( update );
+		}
+		
+		// Осуществляет смену страницы
+		
+		public function setPage( page_id:String ):void {
+			
+			var oldCurrentPage:MovieClip = currentPage;
+			
+			if( popupPage ) {
+				removeChild( popupPage.second );
+				popupPage = null;
+			}
+			
+			switch( page_id ) {
+				
+				case PageViewer.PAGE_FOREST : {
+					if( !forest ) forest = new Forest();
+					currentPage = forest;
+					break;
+				}
+				
+				case PageViewer.PAGE_RATING : {
+					if( !rating ) rating = new Rating();
+					currentPage = rating;
+					break;
+				}
+				
+				case PageViewer.PAGE_HOLE : {
+					if ( !hole ) {
+						hole = new Hole();
+					} else {
+						hole.onHoleMode();
+					}
+					currentPage = hole;
+					break;
+				}
+				
+				case PageViewer.PAGE_CELLAR : {
+					if ( !cellar ) cellar = new Cellar();
+					popupPage = { };
+					popupPage.main = hole;
+					popupPage.second = cellar;
+					break;
+				}
+				
+				case PageViewer.PAGE_PERSONAGES_SHOP : {
+					if ( !personagesShop ) personagesShop = new PersonagesShop();
+					else personagesShop.onEnter();
+					currentPage = personagesShop;
+					break;
+				}
+				
+				case PageViewer.PAGE_SHOP : {
+					if( !shop ) shop = new Shop();
+					popupPage = {};
+					popupPage.main = forest;
+					popupPage.second = shop;
+				}
+			}
+			
+			if( popupPage ) {
+				if( popupPage.main !== currentPage ) {
+					currentPage = popupPage.main;
+					addPage( currentPage, oldCurrentPage );
+				}
+				addPage( popupPage.second );
+				if ( popupPage.second.addMotion !== null ) popupPage.second.addMotion();
+			} else {
+				Main.blockRect.hide();
+				addPage( currentPage, oldCurrentPage )
+			}
+		}
+		
+		private function addPage( page:MovieClip, oldPage:MovieClip = null ):void {
+			if( oldPage && oldPage !== page ) removeChild( oldPage );
+			if( page !== oldPage ) {
+				page.addEventListener( Event.ADDED_TO_STAGE, onAddedToStage );
+				page.addEventListener( Event.REMOVED_FROM_STAGE, onRemovedFromStage );
+				addChild( page );
+			}
+		}
+		
+		private function update():void {
+			body.width = stage.stageWidth;
+			body.height = stage.stageHeight;
+		}
+		
+		private function onAddedToStage( event:Event ):void {
+			event.currentTarget.removeEventListener( Event.ADDED_TO_STAGE, onAddedToStage );
+			event.currentTarget.update();
+			trace( event.currentTarget, " is added to stage." );
+		}
+		
+		private function onRemovedFromStage( event:Event ):void {
+			event.currentTarget.removeEventListener( Event.REMOVED_FROM_STAGE, onRemovedFromStage );
+			trace( event.currentTarget, " is removed from stage." );
+		}
+		
+	}
+	
+}

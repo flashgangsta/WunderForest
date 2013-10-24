@@ -1,0 +1,23 @@
+/*
+ * Delegate
+ *
+ * @author		Sergei Krivtsov
+ * @version		1.00.00
+ * @e-mail		flashgangsta@gmail.com
+ *
+ *
+ */
+
+package com.flashgangsta.utils {
+	
+	public class Delegate {
+		throw new Error( "Delegate is a static class." );
+	}
+	
+	public static function create( handler:Function, ...args ):Function {
+		return function( ...rest ):void {
+			handler.apply( this, rest.concat( args ) );
+		}
+	}
+	
+}

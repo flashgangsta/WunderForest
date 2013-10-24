@@ -1,0 +1,68 @@
+﻿/**
+ * MappingManager
+ * Manager for quick and easy to scale and align objects.
+ *
+ * @author		Sergei Krivtsov
+ * @version		1.00.06
+ * 
+ */
+
+package com.flashgangsta.managers {
+	import flash.display.DisplayObject;
+	import flash.geom.Rectangle;
+	import flash.display.MovieClip;
+	
+	public class MappingManager {
+
+		public function MappingManager() {
+			trace ( "MappingManager is a static class and should not be instantiated." );
+		}
+		
+		
+		public static function setScale( target:DisplayObject, maxWidth:int, maxHeight:int ):void {
+			/*target.width = maxWidth;
+			target.scaleY = target.scaleX;
+			if( target.height > maxHeight ) {
+				target.height = maxHeight;
+				target.scaleX = target.scaleY;
+			}*/
+			target.scaleX = target.scaleY = Math.min( maxWidth / target.width, maxHeight / target.height );
+		}
+		
+		public static function setScaleOnlyReduce( target:Object, maxWidth:int, maxHeight:int ):void {
+			
+			/*target.width = maxWidth;
+			if( target.scaleX > 1 ) target.scaleX = 1;
+			target.scaleY = target.scaleX;
+			if( target.height > maxHeight ) {
+				target.height = maxHeight;
+				if( target.scaleY > 1 ) target.scaleY = 1;
+				target.scaleX = target.scaleY;
+			}*/
+			
+			target.scaleX = target.scaleY = Math.min( maxWidth / target.width, maxHeight / target.height, 1 );
+			
+		}
+		
+		public static function setScaleFillArea( target:Object, area:Rectangle ):void {
+			/*target.width = area.width;
+			target.scaleY = target.scaleX;
+			if( target.height < area.height ) {
+				target.height = area.height;
+				target.scaleX = target.scaleY;
+			}*/
+			target.scaleX = target.scaleY = Math.max( area.width / target.width, area.height / target.height );
+		}
+		
+		public static function setAlign( target:Object, area:Rectangle ):void {
+			target.x = Math.round( area.x + ( ( area.width - target.width ) / 2 ) );
+			target.y = Math.round( area.y + ( ( area.height - target.height ) / 2 ) );
+		}
+		
+		public static function setInCenter( basicValue:Number, objectValue:Number ):int {
+			return Math.round( ( basicValue - objectValue ) / 2 );
+		}
+		
+	}
+	
+}

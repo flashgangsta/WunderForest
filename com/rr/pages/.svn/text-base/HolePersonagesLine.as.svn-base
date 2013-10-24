@@ -1,0 +1,89 @@
+﻿package com.rr.pages {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.User;
+	import com.rr.PersonageParams;
+	
+	
+	public class HolePersonagesLine extends MovieClip {
+		
+		private var prevBtn:MovieClip;
+		private var nextBtn:MovieClip;
+		private var maskObj:MovieClip;
+		private var container:MovieClip;
+		private var items:Vector.<MovieClip> = new Vector.<MovieClip>();
+		
+		public function HolePersonagesLine() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			prevBtn = prevBtn_mc;
+			nextBtn = nextBtn_mc;
+			maskObj = mask_mc;
+			container = cont_mc;
+			
+			ButtonManager.addButton( prevBtn, null );
+			ButtonManager.addButton( nextBtn, null );
+			
+			fillLine();
+		}
+		
+		private function fillLine():void {
+			
+			// Добавляем персонажей в ленту
+			
+			var selectedItem:int;
+			
+			for( var i:int = 0; i < User.personages.length(); i++ ) {
+				var data:XML = User.personages[ i ];
+				var state:String;
+				if( User.favorite === int( data[ PersonageParams.NUM ] ) ) {
+					state = HolePersonagesLineItem.STATE_SELECTED;
+					selectedItem = i;
+				} else {
+					state = HolePersonagesLineItem.STATE_DEFAULT;
+				}
+				var item:HolePersonagesLineItem = new HolePersonagesLineItem( state, data );
+				item.x = HolePersonagesLineItem.WIDHT * i;
+				container.addChild( item );
+				items.push( item );
+			}
+			
+			// Высчитываем сколько есть доступных слотов
+			var addSlotsLength:int = 3 - User.personages.length();
+			
+			// Выводим доступные слоты
+			for( var j = 0; j < addSlotsLength; j++ ) {
+				item = new HolePersonagesLineItem( HolePersonagesLineItem.STATE_ADD );
+				item.x = HolePersonagesLineItem.WIDHT * ( i + j );
+				container.addChild( item );
+				items.push( item );
+			}
+			
+			// Высчитываем сколько надо замков
+			var lockSlotsLength:int = Math.max( 1, 5 - items.length );
+			
+			// Добавляем замки
+			
+			for( var k:int = 0; k < lockSlotsLength; k++ ) {
+				item = new HolePersonagesLineItem( HolePersonagesLineItem.STATE_CLOSED );
+				item.x = HolePersonagesLineItem.WIDHT * ( i + j + k );
+				container.addChild( item );
+				items.push( item );
+			}
+			
+			// Меняем глубину выделенному
+			
+			container.setChildIndex( items[ selectedItem ], container.numChildren - 1 );
+			
+			container.mask = maskObj;
+		}
+		
+	}
+	
+}

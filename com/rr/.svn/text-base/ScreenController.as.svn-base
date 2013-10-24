@@ -1,0 +1,103 @@
+package com.rr {
+	import com.flashgangsta.display.Drawing;
+	import com.flashgangsta.managers.MappingManager;
+	import flash.display.BitmapData;
+	import flash.display.MovieClip;
+	import flash.display.Sprite;
+	import flash.display.StageDisplayState;
+	import flash.events.Event;
+	import flash.events.FullScreenEvent;
+	import flash.geom.Rectangle;
+	import flash.system.Capabilities;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class ScreenController extends MovieClip {
+		
+		private const FRAME_MARGIN:int = 25;
+		
+		private var frame:MovieClip;
+		private var border:Sprite = new Sprite();
+		private var pattern:BitmapData = new FullscreenPattern();
+		
+		public function ScreenController() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			frame = frame_mc;
+			
+			visible = false;
+			mouseChildren = false;
+			mouseEnabled = false;
+			
+			MappingManager.setAlign( frame, new Rectangle( 0, 0, Capabilities.screenResolutionX, Capabilities.screenResolutionY ) );
+			
+		}
+		
+		private function drawBorder():void {
+			var topHeight:int = pattern.height * Math.ceil( frame.y / pattern.height );
+			var bottomHeight:int = stage.stageHeight - ( frame.y + frame.height );
+			var leftWidth:int = pattern.width * Math.ceil( frame.x / pattern.width );
+			var rightWidth:int = stage.stageWidth - ( frame.x + frame.width );
+			
+			var areaWidth:int = leftWidth + frame.width + rightWidth;
+			
+			border.graphics.clear();
+			border.graphics.beginBitmapFill( pattern );
+			border.graphics.drawRect( 0, 0, areaWidth, topHeight ); //top
+			border.graphics.drawRect( 0, topHeight + frame.height, areaWidth, bottomHeight ); //bottom
+			border.graphics.drawRect( 0, topHeight, leftWidth, frame.height ); // left
+			border.graphics.drawRect( leftWidth + frame.width, topHeight, rightWidth, frame.height ); //right
+			border.graphics.endFill();
+			
+			border.cacheAsBitmap = true;
+			
+			border.y = frame.y - topHeight;
+			border.x = frame.x - leftWidth;
+			
+			addChild( border );
+			addChild( frame );
+			
+		}
+		
+		public function onScreenChanged( event:FullScreenEvent ):void {
+			if ( event.fullScreen && ( stage.stageWidth >= Main.MAX_WIDTH || stage.stageHeight >= Main.MAX_HEIGHT ) ) {
+				if( !border.parent ) drawBorder();
+				visible = true;
+			} else {
+				visible = false;
+			}
+		}
+		
+		public function getScreenRect():Rectangle {
+			
+			var rect:Rectangle;
+			
+			trace( Capabilities.screenResolutionX + "x" + Capabilities.screenResolutionY, Main.MAX_WIDTH + "x" + Main.MAX_HEIGHT );
+			
+			if ( stage.displayState === StageDisplayState.NORMAL || !visible ) { // 1400x900
+				trace( 1 );
+				rect = new Rectangle( 0, 0, stage.stageWidth, stage.stageHeight );
+			} else if ( Capabilities.screenResolutionX < Main.MAX_WIDTH && Capabilities.screenResolutionY > Main.MAX_HEIGHT ) { //1280x1024
+				trace( 2 );
+				rect = new Rectangle( 0, frame.y + FRAME_MARGIN, stage.stageWidth, frame.height - ( FRAME_MARGIN * 2 ) );
+			} else if( Capabilities.screenResolutionX > Main.MAX_WIDTH && Capabilities.screenResolutionY < Main.MAX_HEIGHT ) { //1024x1280
+				trace( 3 );
+				rect = new Rectangle( frame.x + FRAME_MARGIN, 0, frame.width - ( FRAME_MARGIN * 2 ), stage.stageHeight );
+			} else { // 1600x1200
+				trace( 4 );
+				rect = new Rectangle( frame.x + FRAME_MARGIN, frame.y + FRAME_MARGIN, frame.width - ( FRAME_MARGIN * 2 ), frame.height - ( FRAME_MARGIN * 2 ) );
+			}
+			
+			return rect;
+		}
+		
+	}
+
+}

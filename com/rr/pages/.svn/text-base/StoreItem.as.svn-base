@@ -1,0 +1,62 @@
+﻿package com.rr.pages {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import flash.text.TextField;
+	import com.rr.utils.TextConverter;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.utils.AvatarLoader;
+	import com.rr.Items;
+	import com.rr.ItemsParams;
+	
+	
+	public class StoreItem extends MovieClip {
+		
+		private var _data:XML;
+		private var _store:Store;
+		private var nameLabel:TextField;
+		private var costLabel:TextField;
+		private var levelLabel:TextField;
+		private var paramsLabel:TextField;
+		private var buyButton:MovieClip;
+		private var icoBack:MovieClip;
+		private var icoContainer:MovieClip;
+		private var avatarLoader:AvatarLoader;
+		
+		
+		public function StoreItem( data:XML, storeLink:Store ) {
+			this.addEventListener( Event.ADDED_TO_STAGE, init );
+			_data = data;
+			_store = storeLink;
+		}
+		
+		private function init( event:Event ):void {
+			this.removeEventListener( Event.ADDED_TO_STAGE, init );
+			nameLabel = name_txt;
+			levelLabel = level_txt;
+			paramsLabel = params_txt;
+			costLabel = cost_txt;
+			buyButton = buy_mc;
+			icoBack = icoBack_mc;
+			icoContainer = new MovieClip();
+			avatarLoader = new AvatarLoader( _data.ico, icoContainer, false, showIco );
+			
+			nameLabel.htmlText = TextConverter.getBold( _data[ ItemsParams.NAME ] );
+			costLabel.htmlText = TextConverter.getBold( _data[ ItemsParams.PRICE + " кркр" ] );
+			levelLabel.htmlText = TextConverter.getBold( "Уровень: " + _data[ ItemsParams.MIN_LEVEL ] );
+			ButtonManager.addButton( buyButton, null, buyItem );
+		}
+		
+		private function showIco():void {
+			icoContainer.x = icoBack.x;
+			icoContainer.y = icoBack.y;
+			this.addChild( icoContainer );
+		}
+		
+		private function buyItem( target:MovieClip ):void {
+			_store.buyItem( _data );
+		}
+		
+	}
+	
+}

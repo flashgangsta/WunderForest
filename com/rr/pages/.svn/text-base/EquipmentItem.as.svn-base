@@ -1,0 +1,23 @@
+package com.rr.pages {
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class EquipmentItem extends MovieClip {
+		
+		public function EquipmentItem() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		
+	}
+
+}

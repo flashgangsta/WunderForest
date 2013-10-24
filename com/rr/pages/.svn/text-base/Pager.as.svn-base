@@ -1,0 +1,85 @@
+﻿package com.rr.pages {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.flashgangsta.managers.ButtonManager;
+	
+	
+	public class Pager extends MovieClip {
+		
+		private var btns:Array;
+		private var _onChanged:Function;
+		private var margin:int = 3;
+		private var turn:Object;
+		private var selected:int = 1;
+		
+		public function Pager() {
+			this.addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			removeChild( page1_mc );
+			btns = [];
+			
+			if( turn ) { // Если есть очередь, выполняем её.
+				turn.action( turn.arguments[ 0 ], turn.arguments[ 1 ] );
+				turn = null;
+			}
+		}
+		
+		// Заполняет страницы
+		
+		public function setPages( length:int, onChanged:Function ):void {
+			
+			if( hasEventListener( Event.ADDED_TO_STAGE ) ) { // Если объект не добавлен на стейдж, ставим выполнение метода в очередь.
+				turn = {};
+				turn.action = setPages;
+				turn.arguments = [ length, onChanged ];
+				return;
+			}
+			
+			_onChanged = onChanged;
+			
+			if( btns.length ) {
+				// Удаляем кнопки
+				ButtonManager.removeButtonGroup( btns[ 0 ] );
+				for( var j:int = 0; j < btns.length; j++ ) {
+					removeChild( btns[ j ] );
+				}
+			}
+			
+			
+			//Добавляем новые
+			
+			btns = [];
+			
+			for( var i:int = 0; i < length; i++ ) {
+				var btn:MovieClip = new PagingBtn();
+				btn.x = ( btn.width + margin ) * i;
+				btn.label_txt.text = ( i + 1 ).toString();
+				btn.label_txt.mouseChildren = false;
+				btn.label_txt.mouseEnabled = false;
+				addChild( btn );
+				btns.push( btn );
+			}
+			ButtonManager.addButtonGroup( btns, true, btns[ 0 ], false, ButtonManager.STATE_PRESSED, onBtnClick );
+		}
+		
+		public function getCurrentPage():int {
+			return selected;
+		}
+		
+		public function setPageSelection( pageNum:int ):void {
+			selected = pageNum;
+			ButtonManager.setSelectionOnGroup( btns[ selected - 1 ] );
+		}
+		
+		private function onBtnClick( target:MovieClip ):void {
+			selected = int( target.label_txt.text );
+			_onChanged( selected );
+		}
+		
+	}
+	
+}

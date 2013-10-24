@@ -1,0 +1,79 @@
+package com.rr.pages {
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.Main;
+	import fl.text.TLFTextField;
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class Equipment extends MovieClip {
+		
+		private var _cellar:Cellar;
+		private var persPlace:MovieClip;
+		private var toShopBtn:MovieClip;
+		private var toItemsBtn:MovieClip;
+		private var message:TLFTextField;
+		private var helmet:EquipmentItem;
+		private var glasses:EquipmentItem;
+		private var body:EquipmentItem;
+		private var accessory:EquipmentItem;
+		private var jawellery:EquipmentItem;
+		private var handRight:EquipmentItem;
+		private var handLeft:EquipmentItem;
+		private var footRight:EquipmentItem;
+		private var footLeft:EquipmentItem;
+		
+		
+		public function Equipment() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			_cellar = Cellar( parent );
+			toShopBtn = toShop_mc;
+			toItemsBtn = toItems_mc;
+			helmet = helmet_mc;
+			glasses = glasses_mc;
+			body = body_mc;
+			accessory = accessory_mc;
+			jawellery = jawellery_mc;
+			handRight = handRight_mc;
+			handLeft = handLeft_mc;
+			footRight = footRight_mc;
+			footLeft = footLeft_mc;
+			
+			ButtonManager.addButton( toShopBtn, null, gotoShop );
+			ButtonManager.addButton( toItemsBtn, null, gotoItems );
+			
+		}
+		
+		private function gotoShop( target:MovieClip ):void {
+			ButtonManager.callReleaseHandler( Main.header.shop );
+			Main.header.setSelection( Main.header.shop );
+		}
+		
+		private function gotoItems( target:MovieClip ):void {
+			ButtonManager.callReleaseHandler( _cellar.equipBtn );
+		}
+		
+		public function build( useDelay:Boolean = false ):void {
+			visible = true;
+			_cellar.personage.hide();
+			_cellar.cellarContainer.hide();
+			if ( _cellar.bag.visible ) _cellar.bag.visible = false;
+			_cellar.hidePersonagesSelector();
+			_cellar.equipmentBtn.visible = _cellar.inBagBtn.visible = false;
+		}
+		
+		public function destroy():void {
+			visible = false;
+		}
+		
+	}
+
+}

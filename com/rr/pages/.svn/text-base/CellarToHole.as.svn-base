@@ -1,0 +1,34 @@
+package com.rr.pages {
+	import caurina.transitions.Tweener;
+	import com.rr.personage.Personage;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class CellarToHole {
+		
+		private var _cellar:Cellar;
+		
+		public function CellarToHole( cellar:Cellar ) {
+			_cellar = cellar;
+		}
+		
+		public function build( useDelay:Boolean = false ):void {
+			_cellar.cellarContainer.changeMode( CellarItemsContainer.MODE_FOR_HOLE );
+			_cellar.personage.hide( Personage.MOTION_METHOD_ALPHA );
+			
+			_cellar.equipmentBtn.visible = false;
+			_cellar.inBagBtn.visible = false;
+			
+			_cellar.hidePersonagesSelector();
+		}
+		
+		public function destroy():void {
+			
+		}
+		
+	}
+	
+}

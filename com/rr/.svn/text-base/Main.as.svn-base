@@ -1,0 +1,176 @@
+﻿/**
+ * @author Sergey Krivtsov
+ */
+
+package com.rr {
+	
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.utils.ComponentManager;
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import com.rr.api.Connector;
+	import flash.events.FullScreenEvent;
+	import flash.ui.MouseCursor;
+	import flash.utils.getQualifiedClassName;
+	import vk.APIConnection;
+	import com.rr.dialogs.DialogFactory;
+	import flash.system.Security;
+	import flash.display.StageScaleMode;
+	import flash.display.StageAlign;
+	import caurina.transitions.Tweener;
+	import flash.display.Stage;
+	import flash.net.navigateToURL;
+	import flash.net.URLRequest;
+	
+	
+	public class Main extends MovieClip {
+		
+		public static const MARGIN:int = 10;
+		public static const WIDTH:int = 760;
+		public static const HEIGHT:int = 700;
+		public static const MAX_WIDTH:int = 1400;
+		public static const MAX_HEIGHT:int = 900;
+		
+		private var preloader:Object;
+		private var isUser:Boolean = false;
+		private static var updateList:Array = [];
+		private static var updateListLength:int = 0;
+		
+		public var flashvars:Object;
+		public var dialogsContainer:MovieClip = new MovieClip();
+		public var cursorContainer:MovieClip = new MovieClip();
+		
+		public static var instance:Main;
+		public static var staticItems:XMLList;
+		public static var dialogs:DialogFactory;
+		public static var apiCon:Connector;
+		public static var vkCon:APIConnection;
+		public static var pageViewer:PageViewer;
+		public static var header:Header;
+		public static var friendslist:Friendslist;
+		public static var settings:Settings;
+		public static var persLoadingHistory:Object = { };
+		public static var blockRect:BlockRectangle;
+		public static var componentManager:ComponentManager = new ComponentManager();
+		public static var screenController:ScreenController = new ScreenController();
+		
+		public function Main() {
+			instance = this;
+			Security.allowDomain( "*" );
+			Security.loadPolicyFile( "http://roulette.1gb.ru/policy/crossdomain.xml" );
+			addEventListener( Event.ADDED_TO_STAGE, addetToStage );
+		}
+		
+		private function addetToStage( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, addetToStage );
+			if( parent === stage ) {
+				loaderInfo.addEventListener( Event.COMPLETE, onComplete );
+			}
+			else {
+				addEventListener( Event.ENTER_FRAME, framePause )
+			}
+		}
+		
+		private function onComplete( event:Event ):void {
+			loaderInfo.removeEventListener( Event.COMPLETE, init );
+			addEventListener( Event.ENTER_FRAME, framePause )
+		}
+		
+		private function framePause( event:Event ):void {
+			removeEventListener( Event.ENTER_FRAME, framePause );
+			init();
+		}
+		
+		private function init( event:Event = null ):void {
+			trace( "Main init" );
+			
+			stage.scaleMode = StageScaleMode.NO_SCALE;
+			stage.align = StageAlign.TOP_LEFT;
+			
+			trace( "\n\n\n", getQualifiedClassName( parent ), getQualifiedClassName( parent ) === "com.rr::Preloader" );
+			trace( getQualifiedClassName( parent.parent ), "\n\n\n" );
+			
+			// Это у нас будет наша флешка прелоадер, кторая вконтакте
+			if ( getQualifiedClassName( parent ) === "com.rr::Preloader" ) {
+				preloader = parent;
+			} else if ( parent ) {
+				preloader = parent.parent;
+			}
+			
+			Main.dialogs = new DialogFactory( this, stage );
+			
+			if( preloader && preloader !== stage ) { //Это чтобы компилилось без ругательств, т.к. прелоадера нет
+				if( !preloader.flashvars ) {
+					trace( this, parent, parent.parent, parent.parent.parent );
+					preloader = preloader.parent; // Это кастылик.
+				}
+				flashvars = preloader.flashvars;
+				Main.vkCon = preloader.vkCon; // Это объект который в прелоадере, осуществляет запросы к вкнонтакту
+				Main.apiCon = preloader.apiCon;
+				Connector.onClient = true; // Выставляем флаг, что мы уже в клиенте
+				
+				Items.recordItems( preloader.staticItems.items ); //Записываем предметы
+				Personages.recordPersonages( preloader.staticItems.personages ); //Записываем персонажа
+				User.recordUser( preloader.personalData, preloader.userData, preloader.userItems ); //Записываем профайл
+				Friends.recordFriends( preloader.appUsersProfilesList, preloader.allFriendsProfilesList ); //Записываем друзей
+				
+				trace( preloader.staticItems );
+				
+			}
+			
+			addChild( Main.screenController );
+			
+			blockRect = new BlockRectangle( stage );
+			
+			addPageViewer();
+			addHeader();
+			addFriendslist();
+			addSettings();
+			
+			Main.pageViewer.setPage( PageViewer.PAGE_FOREST );
+			
+			ButtonManager.addCustomMouseCursor( cursorContainer, MouseCursor, stage );
+			
+			addChild( dialogsContainer );
+			addChild( Main.screenController );
+			addChild( cursorContainer );
+			
+			stage.addEventListener( FullScreenEvent.FULL_SCREEN, onResize );
+			
+		}
+		
+		private function addHeader():void {
+			header = new Header( this );
+			addChild( header );
+		}
+		
+		private function addFriendslist():void {
+			friendslist = new Friendslist();
+			addChild( friendslist );
+		}
+		
+		private function addSettings():void {
+			settings = new Settings();
+			addChild( settings );
+		}
+		
+		private function addPageViewer():void {
+			Main.pageViewer = new PageViewer();
+			addChild( Main.pageViewer );
+		}
+		
+		private function onResize( event:FullScreenEvent ):void {
+			Main.screenController.onScreenChanged( event );
+			for( var i:int = 0; i < updateListLength; i++ ) {
+				var handler:Function = updateList[ i ];
+				handler();
+			}
+		}
+		
+		public static function addUpdateItem( item:Function ):void {
+			updateList[ updateListLength++ ] = item;
+		}
+		
+	}
+	
+}

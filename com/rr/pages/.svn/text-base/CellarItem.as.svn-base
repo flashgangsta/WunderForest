@@ -1,0 +1,41 @@
+﻿package com.rr.pages {
+	
+	import com.rr.ItemsParams;
+	import com.rr.utils.AvatarLoader;
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class CellarItem extends MovieClip {
+		
+		private var _data:XML;
+		private var ico:MovieClip;
+		private var avatarLoader:AvatarLoader;
+		
+		public function CellarItem() {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+		}
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			ico = ico_mc;
+			if ( _data ) fill( _data );
+		}
+		
+		public function fill( data:XML ):void {
+			visible = Boolean( data );
+			_data = data;
+			if ( hasEventListener( Event.ADDED_TO_STAGE ) ) return;
+			
+			avatarLoader = new AvatarLoader( _data[ ItemsParams.ICO ], ico, AvatarLoader.SCALE_REDUCE, AvatarLoader.ALIGN_CENTER_CENTER );
+			
+		}
+		
+	}
+	
+}

@@ -1,0 +1,291 @@
+﻿package com.rr {
+	
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import flash.display.LoaderInfo;
+	import com.rr.errors.VkErrors;
+	import com.rr.api.Connector;
+	import com.rr.api.Methods;
+	import vk.APIConnection;
+	import flash.display.Loader;
+	import flash.net.URLRequest;
+	import flash.events.ProgressEvent;
+	import flash.system.Security;
+	import flash.system.LoaderContext;
+	import flash.system.SecurityDomain;
+	import flash.system.ApplicationDomain;
+	import flash.utils.Timer;
+	import flash.events.TimerEvent;
+	import fl.text.TLFTextField;
+	import flash.net.URLLoader;
+	import flash.text.TextField;
+	import flash.utils.getTimer;
+	import flash.utils.setTimeout;
+	
+	
+	public class Preloader extends MovieClip {
+		
+		private static const APP_SERVER:String = "http://roulette.1gb.ru/";
+		private static const APP_URL:String = Preloader.APP_SERVER + "russianRoulette.swf";
+		
+		private var preloader:MovieClip;
+		private var appInstallRequestTimer:Timer;
+		private var appInstallRequestBanned:Boolean = false;
+		private var isAppUser:Boolean = false;
+		private var sig:TLFTextField;
+		private var loaderSigLabel:TLFTextField;
+		private var logo:TextField;
+		private var lastRequestTime:Number;
+		private var requestInterval:Number = 1000;
+		private var requestPause:Number;
+		private var loader:Loader;
+		
+		public var flashvars:Object;
+		public var staticItems:XMLList;
+		public var userData:XMLList; //
+		public var userItems:XMLList;
+		public var personalData:Object; // Список инфы о себе из вконтакта
+		public var appUsersList:Object; // Список id друзкй, установивших прилагу
+		public var appUsersProfilesList:Object; //Список профайлов друзей, установивших прилагу
+		public var allFriendsList:Object; //Список id всех друзей
+		public var allFriendsProfilesList:Object; //Список профайлов всех друзей
+		public var vkCon:APIConnection;
+		public var apiCon:Connector;
+		
+		public function Preloader() {
+			Security.allowDomain( Preloader.APP_SERVER );
+			Security.loadPolicyFile( Preloader.APP_SERVER );
+			root.loaderInfo.addEventListener( Event.COMPLETE, init );
+		}
+		
+		private function init( event:Event ):void {
+			trace( "Loader class init" );
+			root.loaderInfo.removeEventListener( Event.COMPLETE, init );
+			
+			preloader = preloader_mc;
+			sig = loaderSig_txt;
+			loaderSigLabel = loaderSigLabel_txt;
+			logo = logo_txt;
+			flashvars = stage.loaderInfo.parameters as Object;
+			
+			
+			vkCon = new APIConnection( flashvars );
+			apiCon = new Connector( flashvars.user_id );
+			authorization(); // Авторизация, стартует с проверки установки приложения
+			
+		}
+		
+		/*
+		*
+		*	Проверка на установку приложения
+		*
+		*/
+		
+		private function authorization():void {
+			vkCon.api( "isAppUser", {}, isAppUserComplete, VkErrors.isApiUserError );
+			sig.text = "Установка соединения.";
+			lastRequestTime = getTimer();
+		}
+		
+		private function isAppUserComplete ( response:String ):void { //Получение ответа добавил ли юзер приложение.
+			if(response === "1") { //Приложение установлено
+				isAppUser = true;
+				requestPause = getTimer() - lastRequestTime;
+				if( requestPause >= requestInterval ) {
+					loadPersonalData();
+				} else {
+					setTimeout( loadPersonalData, requestPause );
+				}
+			} else { //Приложение не установлено.
+				isAppUser = false;
+				vkCon.callMethod( "showInstallBox" );// выводим окно предлагающее установть приложение
+				appInstallRequestTimer = new Timer( 3000 );
+				appInstallRequestBanned = true;
+			}
+			
+			trace( "isAppUser = " +  response );
+		}
+		
+		/*
+		*
+		*	Загрузка персональных данных пользователя
+		*
+		*/
+		
+		private function loadPersonalData():void {
+			vkCon.api( "getProfiles", { uids: flashvars.viewer_id, fields: "uid, first_name, last_name, nickname, photo, photo_medium, photo_big, sex" }, onPersonalData, VkErrors.personalDataError );
+			lastRequestTime = getTimer();
+			sig.text = "Чтение данных";
+		}
+		
+		private function onPersonalData( response:Object ):void {
+			trace( "personal data:\n", response[ 0 ].sex );
+			personalData = response[ 0 ];
+			requestPause = getTimer() - lastRequestTime;
+			if(  requestPause >= requestInterval ) {
+				loadAppUsers();
+			} else {
+				setTimeout( loadAppUsers, requestPause );
+			}
+		}
+		
+		/*
+		*
+		*	Загрузка списка id друзей, установивших приложение
+		*
+		*/
+		
+		private function loadAppUsers():void {
+			vkCon.api( "friends.getAppUsers", {}, onAppUsers, VkErrors.appUsersError );
+			lastRequestTime = getTimer();
+		}
+		
+		private function onAppUsers( response:Object ):void {
+			trace( "appUsers data:\n" );
+			appUsersList = response;
+			requestPause = getTimer() - lastRequestTime;
+			if(  requestPause >= requestInterval ) {
+				loadAppUsersProfiles();
+			} else {
+				setTimeout( loadAppUsersProfiles, requestPause );
+			}
+		}
+		
+		/*
+		*
+		*	Загрузка профайлов друзей, установивших приложение
+		*
+		*/
+		
+		private function loadAppUsersProfiles():void {
+			vkCon.api( "getProfiles", { uids: appUsersList.toString(), fields: "uid, first_name, last_name, nickname, photo_medium" }, onAppUsersProfiles, VkErrors.appAppUsersProfiles );
+			lastRequestTime = getTimer();
+		}
+		
+		private function onAppUsersProfiles( response:Object ):void {
+			trace( "appUsersProfiles: \n" );
+			appUsersProfilesList = response;
+			requestPause = getTimer() - lastRequestTime;
+			if(  requestPause >= requestInterval ) {
+				loadAllFriends();
+			} else {
+				setTimeout( loadAllFriends, requestPause );
+			}
+		}
+		
+		/*
+		*
+		*	Загрузка списка всех друзей
+		*
+		*/
+		
+		private function loadAllFriends():void {
+			vkCon.api( "friends.get", { fields: "uid, first_name, last_name, nickname, photo_medium" }, onAllFriends, VkErrors.allFriends );
+			lastRequestTime = getTimer();
+		}
+		
+		private function onAllFriends( response:Object ):void {
+			trace( "onAllFriendsProfilesList" );
+			allFriendsProfilesList = response;
+			loadAppParams();
+		}
+		
+		
+		/**
+		*
+		*	Загрузка xml с данными о предметах
+		*
+		*/
+		
+		private function loadAppParams():void {
+			
+			trace( "loadAppParams started" );
+			
+			apiCon.send( Methods.getStaticItems, {}, paramsLoaded );
+			
+			sig.text = "Загрузка параметров."
+		}
+		
+		private function paramsLoaded( params:XMLList ):void {
+			staticItems = params;
+			loadUserData();
+		}
+		
+		/**
+		*
+		*	Загрузка профайла юзера
+		*
+		*/
+		
+		private function loadUserData():void {
+			
+			trace( "loadUserData started" );
+			
+			apiCon.send( Methods.getProfile, {}, onUserData );
+			sig.text = "Получение профайла."
+			
+		}
+		
+		private function onUserData( params:XMLList ):void {
+			userData = params;
+			loadUserItems(); // Грузим предметы
+		}
+		
+		/**
+		*
+		*	Загрузка предметов юзера
+		*
+		*/
+		
+		private function loadUserItems():void {
+			
+			trace( "loadUserItems started" );
+			
+			apiCon.send( Methods.getItems, {}, onUserItems );
+			
+		}
+		
+		
+		private function onUserItems( params:XMLList ):void {
+			userItems = params;
+			loadApp(); // Грузим предметы
+		}
+		
+		
+		/**
+		*
+		*	Загрузка приложения
+		*
+		*/
+		
+		private function loadApp():void {
+			trace("loadApp started");
+			loader = new Loader();
+			var request:URLRequest = new URLRequest( Preloader.APP_URL + "?rnd=" + new Date().getTime() );
+			
+			loader.load( request, new LoaderContext( false, ApplicationDomain.currentDomain, SecurityDomain.currentDomain ) );
+			
+			loader.contentLoaderInfo.addEventListener( ProgressEvent.PROGRESS, appLoadProgerss );
+			loader.contentLoaderInfo.addEventListener( Event.COMPLETE, appLoaded );
+			sig.text = "Загрузка приложения.";
+		}
+		
+		private function appLoadProgerss( event:ProgressEvent ):void {
+			var precent:Number = Math.round( event.bytesLoaded / event.bytesTotal * 100 );
+			preloader.gotoAndStop( Math.round( preloader.totalFrames / 100 * precent ) );
+			sig.text = "Загрузка приложения " + precent + "%.";
+		}
+		
+		private function appLoaded( event:Event ):void {
+			addChild( loader.content );
+			loader.contentLoaderInfo.removeEventListener( ProgressEvent.PROGRESS, appLoadProgerss );
+			loader.contentLoaderInfo.removeEventListener( Event.INIT, appLoaded );
+			trace( "app loaded" );
+			removeChild( preloader );
+			removeChild( loaderSig_txt );
+			removeChild( loaderSigLabel );
+			removeChild( logo );
+			loader = null;
+		}
+	}
+}

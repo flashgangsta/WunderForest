@@ -1,0 +1,153 @@
+﻿package com.rr.dialogs {
+	
+	import com.rr.Entities;
+	import com.rr.Main;
+	import fl.text.TLFTextContainerManager;
+	import flash.display.MovieClip;
+	import flash.events.Event;
+	import fl.text.TLFTextField;
+	import com.flashgangsta.managers.ButtonManager;
+	import com.rr.utils.TextConverter;
+	import com.rr.ItemsParams;
+	import flash.text.TextFieldAutoSize;
+	import flash.display.BitmapData;
+	import flash.display.Bitmap;
+	import com.flashgangsta.managers.MappingManager;
+	import flash.display.Sprite;
+	import com.rr.personage.Personage;
+	import com.rr.PersonageParams;
+	import com.rr.Personages;
+	import com.rr.User;
+	import flash.text.TextFieldAutoSize;
+	
+	/**
+	 * ...
+	 * @author Sergey Krivtsov
+	 */
+	
+	public class ShopPersWindow extends MovieClip {
+		
+		private var _data:XML;
+		private var _onBuy:Function;
+		private var _onCancel:Function;
+		private var closeBtn:MovieClip;
+		private var priceBtn:MovieClip;
+		private var label:TLFTextField;
+		private var ico:MovieClip;
+		private var persContainer:Sprite;
+		private var cuttentPersData:XML;
+		private var personage:Personage;
+		private var personagePlace:MovieClip;
+		private var persNameLabel:TLFTextField;
+		private var lockLabel:TLFTextField;
+		private var lockIco:MovieClip;
+		private var sideRightBtn:MovieClip;
+		private var sideLeftBtn:MovieClip;
+		private var sideIco:MovieClip;
+		
+		
+		public function ShopPersWindow( data:XML, onBuy:Function, onCancel:Function ) {
+			addEventListener( Event.ADDED_TO_STAGE, init );
+			_data = data;
+			_onBuy = onBuy;
+			_onCancel = onCancel;
+		}
+		
+		public function insertImage( bmd:BitmapData ):void {
+			var bitmap:Bitmap = new Bitmap( bmd, "auto", true );
+			addChild( bitmap );
+			MappingManager.setScaleOnlyReduce( bitmap, ico.width, ico.height );
+			MappingManager.setAlign( bitmap, ico.getBounds( this ) );
+		}
+		
+		/**
+		 * private methods
+		 * 
+		 */
+		
+		private function init( event:Event ):void {
+			removeEventListener( Event.ADDED_TO_STAGE, init );
+			
+			closeBtn = close_mc;
+			priceBtn = price_mc;
+			label = label_txt;
+			ico = ico_mc;
+			personagePlace = personagePlace_mc;
+			persNameLabel = persNameLabel_txt;
+			lockLabel = lockLabel_txt;
+			lockIco = lockIco_mc;
+			sideRightBtn = sideRightBtn_mc;
+			sideLeftBtn = sideLeftBtn_mc;
+			sideIco = sideIco_mc;
+			
+			label.text = _data[ ItemsParams.NAME ];
+			persNameLabel.text = User.getFavoritePers()[ PersonageParams.NAME ]
+			
+			addPers();
+			setPrice();
+			
+			ButtonManager.addButton( closeBtn, null, _onCancel );
+			ButtonManager.addButton( priceBtn, null, _onBuy );
+			
+			
+			sideRightBtn.label_mc.label_txt.text = String( sideRightBtn.label_mc.label_txt.text ).replace( "%side%", "справа" );
+			sideLeftBtn.label_mc.label_txt.text = String( sideLeftBtn.label_mc.label_txt.text ).replace( "%side%", "слева" );
+			
+			
+		}
+		
+		// Заполняет кнопку-ценник и доступность по уровню
+		
+		private function setPrice():void {
+			/*var priceLabel:TLFTextField = priceBtn.label_mc.price_txt;
+			var prefixLabel:TLFTextField = priceBtn.label_mc.prefix_txt;
+			var priceIco:MovieClip = priceBtn.label_mc.ico_mc;
+			var maxWidth:int = priceBtn.body_mc.width;
+			var labelWidth:int;*/
+			var minLvl:int = _data[ ItemsParams.MIN_LEVEL ];
+			
+			lockIco.visible = User.getFavoritePers()[ PersonageParams.LEVEL ] < minLvl;
+			
+			if ( lockIco.visible ) {
+				lockLabel.text = lockLabel.text.replace( "%lvl%", minLvl );
+				lockLabel.autoSize = TextFieldAutoSize.LEFT;
+			}
+			
+			Main.componentManager.fillBuyLabelButton( priceBtn, _data[ lockIco.visible ? ItemsParams.UNLOCK_PRICE : ItemsParams.PRICE ], lockIco.visible ? Entities.GOLD : Entities.NUT );
+			
+			/*priceIco.gotoAndStop( lockIco.visible ? Entities.GOLD : Entities.NUT );
+			priceLabel.text = TextConverter.getNumber(  _data[ lockIco.visible ? ItemsParams.UNLOCK_PRICE : ItemsParams.PRICE ] );
+			priceLabel.autoSize = TextFieldAutoSize.LEFT;
+			
+			labelWidth = priceLabel.x + priceLabel.textWidth;
+			
+			var icoMargin:int = priceIco.x - prefixLabel.width;
+			var priceMargin:int = priceLabel.x - prefixLabel.width;
+			
+			prefixLabel.x = MappingManager.setInCenter( maxWidth, labelWidth ) - 5;
+			priceIco.x = prefixLabel.x + prefixLabel.width + icoMargin;
+			priceLabel.x = prefixLabel.x + prefixLabel.width + priceMargin;*/
+		}
+		
+		// Выводит персонажа
+		
+		private function addPers():void {
+			
+			persContainer = new Sprite();
+			persContainer.x = personagePlace.x;
+			persContainer.y = personagePlace.y;
+			addChild( persContainer );
+			
+			personage = new Personage( User.getFavoritePers(), persContainer, personagePlace.getBounds( personagePlace ), onPersLoaded );
+			
+		}
+		
+		// Обработчик окончания загрузки персонажа
+		
+		private function onPersLoaded():void {
+			
+		}
+		
+	}
+	
+}

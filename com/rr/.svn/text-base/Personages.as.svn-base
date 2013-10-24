@@ -1,0 +1,30 @@
+﻿package com.rr {
+	
+	public class Personages {
+
+		public function Personages() {
+			throw new Error( "Personages is a static class" );
+		}
+		
+		public static var personages:XMLList = new XMLList();
+		
+		public static function recordPersonages( data:XMLList ):void {
+			personages = data.personage;
+		}
+		
+		public static function getPersonage( personage_id:String ):XML {
+			var currentPersonage:XML;
+			for( var i:int = 0; i < personages.length(); i++ ) {
+				currentPersonage = personages[ i ];
+				if( currentPersonage[ PersonageParams.ID ] == personage_id ) {
+					break;
+				}
+			}
+			
+			return currentPersonage;
+			
+		}
+		
+	}
+	
+}

@@ -1,0 +1,25 @@
+﻿package com.rr {
+	
+	public class HoleParams {
+		
+		public static const VKID:String = "vkid";
+		public static const FLOOR:String = "floor";
+		public static const DOOR:String = "door";
+		public static const BREAKER:String = "breaker";
+		public static const PICTURES:String = "pictures";
+		public static const WALLCARPER:String = "wallcrpet";
+		public static const CARPET:String = "carpet";
+		public static const MAGNETS:String = "magnets";
+		public static const MISC:String = "misc";
+		public static const MONEYBOX:String = "moneybox";
+		public static const WINDOW:String = "window";
+		public static const PORTRAITS:String = "portraits";
+		public static const WALLPAPER:String = "wallpaper";
+		
+		public function HoleParams() {
+			throw new Error( "HoleParams is static class." );
+		}
+
+	}
+	
+}
