@@ -344,10 +344,10 @@
 			loader.contentLoaderInfo.removeEventListener( ProgressEvent.PROGRESS, appLoadProgerss );
 			loader.contentLoaderInfo.removeEventListener( Event.COMPLETE, appLoaded );
 			trace( "app loaded" );
-			removeChild( preloader );
-			removeChild( loaderSig_txt );
-			removeChild( loaderSigLabel );
-			removeChild( logo );
+			removeChild( getChildByName( "preloader_mc" ) as MovieClip );
+			removeChild( getChildByName( "loaderSig_txt" ) as TLFTextField );
+			removeChild( getChildByName( "loaderSigLabel_txt" ) as TLFTextField );
+			removeChild( getChildByName( "logo_txt" ) as TextField );
 			loader = null;
 		}
 	}

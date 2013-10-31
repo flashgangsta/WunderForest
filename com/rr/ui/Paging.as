@@ -33,8 +33,8 @@
 		 */
 		
 		public function Paging() {
-			page1_mc.stop();
-			removeChild( page1_mc );
+			(getChildByName( "page1_mc" ) as MovieClip).stop();
+			removeChild( getChildByName( "page1_mc" ) as MovieClip );
 		}
 		
 		/**
