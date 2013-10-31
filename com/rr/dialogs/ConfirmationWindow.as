@@ -1,6 +1,7 @@
 ﻿package com.rr.dialogs {
 	
 	import flash.display.MovieClip;
+  import flash.display.Sprite;
 	import flash.events.Event;
 	import com.flashgangsta.managers.ButtonManager;
 	import fl.text.TLFTextField;
@@ -20,8 +21,8 @@
 		private var noButton:MovieClip;
 		private var titleLabel:TLFTextField;
 		private var messageLabel:TLFTextField;
-		private var bg:MovieClip;
-		private var image:MovieClip;
+		private var bg:Sprite;
+		private var image:Sprite;
 		
 		public function ConfirmationWindow( title:String, message:String, bitmap:BitmapData, onYes:Function, onNo:Function ) {
 			addEventListener( Event.ADDED_TO_STAGE, init );
@@ -38,12 +39,12 @@
 			
 			removeEventListener( Event.ADDED_TO_STAGE, init );
 			
-			yesButton = yes_mc; 
-			noButton = no_mc;
-			titleLabel = title_txt;
-			messageLabel = message_txt;
-			bg = bg_mc;
-			image = image_mc;
+			yesButton    = getChildByName( "yes_mc" ) as MovieClip; 
+			noButton     = getChildByName( "no_mc" )  as MovieClip;
+			titleLabel   = getChildByName( "title_txt" )   as TLFTextField;
+			messageLabel = getChildByName( "message_txt" ) as TLFTextField;
+			bg           = getChildByName( "bg_mc" )    as Sprite;
+			image        = getChildByName( "image_mc" ) as Sprite;
 			
 			titleLabel.text = _title;
 			messageLabel.text = _message;
