@@ -44,6 +44,7 @@ package com.rr {
 				var friend3:Object = { };
 				var friend4:Object = { };
 				var friend5:Object = { };
+        var friend6:Object = { };
 				
 				friend1.uid = 4116901;
 				friend1.first_name = "Костя";
@@ -70,8 +71,13 @@ package com.rr {
 				friend5.last_name = "Lokhova";
 				friend5.photo_medium = "../assets/avatars/b_gala.jpg";
 				
+        friend6.uid = 4116906;
+				friend6.first_name = "Роберто";
+				friend6.last_name = "Карлос";
+				friend6.photo_medium = 	"../assets/avatars/b_1418a99c.jpg";
+	
 				
-				response.push( friend1, friend2, friend3, friend4, friend5 );
+				response.push( friend1, friend2, friend3, friend4, friend5,friend6 );
 				
 				return response;
 		}
