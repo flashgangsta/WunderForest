@@ -20,8 +20,8 @@
 		
 		private function init( event:Event ):void {
 			this.removeEventListener( Event.ADDED_TO_STAGE, init );
-			titleLabel = title_txt;
-			messageLabel = message_txt;
+			titleLabel = getChildByName( "title_txt" ) as TextField;
+			messageLabel = getChildByName( "message_txt" ) as TextField;
 			
 			titleLabel.text = _title;
 			messageLabel.text = _message;

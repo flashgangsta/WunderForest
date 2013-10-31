@@ -43,11 +43,11 @@
 		private function init( event:Event ):void {
 			removeEventListener( Event.ADDED_TO_STAGE, init );
 			
-			fayBtn = fay_mc;
-			bankBtn = bank_mc;
-			persShopBtn = persShop_mc;
-			holeBtn = hole_mc;
-			boarsBtn = boars_mc;
+			fayBtn = getChildByName( "fay_mc" ) as MovieClip;
+			bankBtn = getChildByName( "bank_mc" ) as MovieClip;
+			persShopBtn = getChildByName( "persShop_mc" ) as MovieClip;
+			holeBtn = getChildByName( "hole_mc" ) as MovieClip;
+			boarsBtn = getChildByName( "boars_mc" ) as MovieClip;
 			
 			ButtonManager.addButton( fayBtn, null, onFayBtnClicked );
 			ButtonManager.addButton( bankBtn, null, onBankBtnClicked );
