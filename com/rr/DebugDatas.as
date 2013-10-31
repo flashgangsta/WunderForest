@@ -24,9 +24,9 @@ package com.rr {
 			user.first_name = "Сергей";
 			user.last_name = "Кривцов";
 			user.nickname = "никнейм";
-			user.photo = "../bitmaps/avatars/e_9b0da00f.jpg";
-			user.photo_medium = "../bitmaps/avatars/b_f9a2c368.jpg";
-			user.photo_big = "../bitmaps/avatars/a_5e780b31.jpg";
+			user.photo = "../assets/avatars/e_9b0da00f.jpg";
+			user.photo_medium = "../assets/avatars/b_f9a2c368.jpg";
+			user.photo_big = "../assets/avatars/a_5e780b31.jpg";
 			user.sex = 2;
 			response.push( user );
 			return response;
@@ -48,27 +48,28 @@ package com.rr {
 				friend1.uid = 4116901;
 				friend1.first_name = "Костя";
 				friend1.last_name = "Цзю";
-				friend1.photo_medium = "../bitmaps/avatars/b_1910da68.jpg";
+				friend1.photo_medium = "../assets/avatars/b_1910da68.jpg";
 				
 				friend2.uid = 4116902;
 				friend2.first_name = "Мик";
 				friend2.last_name = "Джагер";
-				friend2.photo_medium = "../bitmaps/avatars/b_a65e6479.jpg";
+				friend2.photo_medium = "../assets/avatars/b_a65e6479.jpg";
 				
 				friend3.uid = 4116903;
 				friend3.first_name = "Тото";
 				friend3.last_name = "Кутуньо";
-				friend3.photo_medium = "../bitmaps/avatars/b_6495bff0.jpg";
+				friend3.photo_medium = "../assets/avatars/b_6495bff0.jpg";
 				
 				friend4.uid = 4116904;
-				friend4.first_name = "Марк";
-				friend4.last_name = "Шагал";
-				friend4.photo_medium = "../bitmaps/avatars/b_bff84665.jpg";
+				friend4.first_name = "Nasta";
+				friend4.last_name = "Andreychenko";
+				friend4.photo_medium = "../assets/avatars/b_nasta.jpg";
 				
 				friend5.uid = 4116905;
-				friend5.first_name = "Александр";
-				friend5.last_name = "Лукашенко";
-				friend5.photo_medium = "../bitmaps/avatars/b_1418a99c.jpg";
+				friend5.first_name = "Gala";
+				friend5.last_name = "Lokhova";
+				friend5.photo_medium = "../assets/avatars/b_gala.jpg";
+				
 				
 				response.push( friend1, friend2, friend3, friend4, friend5 );
 				
@@ -95,42 +96,43 @@ package com.rr {
 				friend1.uid = 4116901;
 				friend1.first_name = "Костя";
 				friend1.last_name = "Цзю";
-				friend1.photo_medium = "../bitmaps/avatars/b_1910da68.jpg";
+				friend1.photo_medium = "../assets/avatars/b_1910da68.jpg";
 				
 				friend2.uid = 4116902;
 				friend2.first_name = "Мик";
 				friend2.last_name = "Джагер";
-				friend2.photo_medium = "../bitmaps/avatars/b_a65e6479.jpg";
+				friend2.photo_medium = "../assets/avatars/b_a65e6479.jpg";
 				
 				friend3.uid = 4116903;
 				friend3.first_name = "Тото";
 				friend3.last_name = "Кутуньо";
-				friend3.photo_medium = "../bitmaps/avatars/b_6495bff0.jpg";
+				friend3.photo_medium = "../assets/avatars/b_6495bff0.jpg";
 				
 				friend4.uid = 4116904;
-				friend4.first_name = "Марк";
-				friend4.last_name = "Шагал";
-				friend4.photo_medium = "../bitmaps/avatars/b_bff84665.jpg";
+				friend4.first_name = "Nasta";
+				friend4.last_name = "Andreychenko";
+				friend4.photo_medium = "../assets/avatars/b_nasta.jpg";
 				
 				friend5.uid = 4116905;
-				friend5.first_name = "Александр";
-				friend5.last_name = "Лукашенко";
-				friend5.photo_medium = "../bitmaps/avatars/b_1418a99c.jpg";
+				friend5.first_name = "Gala";
+				friend5.last_name = "Lokhova";
+				friend5.photo_medium = "../assets/avatars/b_gala.jpg";
+	
 				
 				friend6.uid = 4116906;
 				friend6.first_name = "Роберто";
 				friend6.last_name = "Карлос";
-				friend6.photo_medium = 	"../bitmaps/avatars/b_1418a99c.jpg";
+				friend6.photo_medium = 	"../assets/avatars/b_1418a99c.jpg";
 				
 				friend7.uid = 4116907;
 				friend7.first_name = "Роберто";
 				friend7.last_name = "Карлос";
-				friend7.photo_medium = "../bitmaps/avatars/b_1418a99c.jpg";
+				friend7.photo_medium = "../assets/avatars/b_1418a99c.jpg";
 				
 				friend8.uid = 4116908;
 				friend8.first_name = "Роберто";
 				friend8.last_name = "Карлос";
-				friend8.photo_medium = "../bitmaps/avatars/b_1418a99c.jpg";
+				friend8.photo_medium = "../assets/avatars/b_1418a99c.jpg";
 				
 				response.push( friend1, friend2, friend3, friend4, friend5, friend6, friend7, friend8 );
 				
