@@ -20,8 +20,8 @@ package com.rr.dialogs {
 	
 		private function init( event:Event ):void {
 			removeEventListener( Event.ADDED_TO_STAGE, init );
-			
-			closeBtn = closeBtn_mc;
+
+			closeBtn = getChildByName( "closeBtn_mc" ) as MovieClip;
 			
 			ButtonManager.addButton( closeBtn, null, onCloseClicked );
 		}

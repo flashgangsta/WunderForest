@@ -3,6 +3,7 @@
 	import com.rr.utils.TextConverter;
 	import fl.text.TLFTextField;
 	import flash.display.MovieClip;
+  import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.text.TextFieldAutoSize;
 	
@@ -13,7 +14,7 @@
 	
 	public class BagCounter extends MovieClip {
 		
-		private var bg:MovieClip;
+		private var bg:Sprite;
 		private var label:TLFTextField;
 		
 		public function BagCounter() {
@@ -23,8 +24,8 @@
 		private function init( event:Event ):void {
 			removeEventListener( Event.ADDED_TO_STAGE, init );
 			
-			label = label_txt;
-			bg = bg_mc;
+			label = getChildByName( "label_txt" ) as TLFTextField;
+			bg    = getChildByName( "bg_mc" ) as Sprite;
 			
 		}
 		
