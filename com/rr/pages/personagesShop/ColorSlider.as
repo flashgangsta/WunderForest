@@ -31,8 +31,8 @@ package com.rr.pages.personagesShop
 		private function init( event:Event ):void {
 			removeEventListener( Event.ADDED_TO_STAGE, init );
 			
-			colorArea = colorArea_mc;
-			slider = slider_mc;
+			colorArea = getChildByName( "colorArea_mc" ) as MovieClip;
+			slider = getChildByName( "slider_mc" ) as MovieClip;
 			
 			drawColorPalette();
 			

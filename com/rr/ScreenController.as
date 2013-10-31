@@ -45,7 +45,7 @@ package com.rr {
 		private function init( event:Event ):void {
 			removeEventListener( Event.ADDED_TO_STAGE, init );
 			
-			frame = frame_mc;
+			frame = getChildByName( "frame_mc" ) as MovieClip;
 			
 			visible = false;
 			mouseChildren = false;
