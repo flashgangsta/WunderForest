@@ -4,7 +4,7 @@
   <output>
     <movie outputType="OtherIDE" />
     <movie input="" />
-    <movie path="" />
+    <movie path="publish\russianRoulette_out" />
     <movie fps="30" />
     <movie width="800" />
     <movie height="600" />
@@ -20,9 +20,11 @@
   <!-- Build options -->
   <build>
     <option accessible="False" />
+    <option advancedTelemetry="False" />
     <option allowSourcePathOverlap="False" />
     <option benchmark="False" />
     <option es="False" />
+    <option inline="False" />
     <option locale="" />
     <option loadConfig="" />
     <option optimize="False" />
@@ -71,11 +73,11 @@
   </library>
   <!-- Class files to compile (other referenced classes will automatically be included) -->
   <compileTargets>
-    <!-- example: <compile path="..." /> -->
+    <compile path="com\rr\Main.as" />
   </compileTargets>
   <!-- Paths to exclude from the Project Explorer tree -->
   <hiddenPaths>
-    <!-- example: <hidden path="..." /> -->
+    <hidden path="obj" />
   </hiddenPaths>
   <!-- Executed before build -->
   <preBuildCommand />
@@ -85,6 +87,7 @@
   <options>
     <option showHiddenPaths="False" />
     <option testMovie="Unknown" />
+    <option testMovieCommand="" />
   </options>
   <!-- Plugin storage -->
   <storage />
